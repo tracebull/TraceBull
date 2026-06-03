@@ -72,6 +72,7 @@ interface Props {
   hasMoreResults: boolean;
   onLoadMore: () => void;
   onAddFieldToQuery?: (fieldName: string, fieldValue: string) => void;
+  isRealtimeStreaming?: boolean;
 }
 
 /**
@@ -93,6 +94,7 @@ export const QueryResultsComponent = ({
   hasMoreResults,
   onLoadMore,
   onAddFieldToQuery,
+  isRealtimeStreaming = false,
 }: Props): React.JSX.Element | null => {
   // States
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -112,6 +114,10 @@ export const QueryResultsComponent = ({
       return;
     }
 
+    if (isRealtimeStreaming) {
+      return;
+    }
+
     // Find the scrollable parent container
     const scrollContainer = containerRef.current?.closest('.overflow-y-auto') as HTMLElement;
     if (!scrollContainer) {
@@ -127,7 +133,7 @@ export const QueryResultsComponent = ({
       isLoadingMore.current = true;
       onLoadMore();
     }
-  }, [hasMoreResults, isExecuting, onLoadMore]);
+  }, [hasMoreResults, isExecuting, isRealtimeStreaming, onLoadMore]);
 
   const renderLogLevel = (level: string) => {
     const colors = {
@@ -346,7 +352,9 @@ export const QueryResultsComponent = ({
               </label>
             </div>
             <span className="text-muted-foreground text-xs font-normal">
-              {isExecuting && queryResults.length === 0 ? (
+              {isRealtimeStreaming ? (
+                `Live - ${queryResults.length.toLocaleString()} results loaded`
+              ) : isExecuting && queryResults.length === 0 ? (
                 <Spinner size="sm" />
               ) : (
                 `${queryResults.length.toLocaleString()}${totalResults > queryResults.length ? `+ of ${totalResults.toLocaleString()}` : ''} results${queryResults.length > 0 ? ' loaded' : ' found'}`
@@ -440,7 +448,7 @@ export const QueryResultsComponent = ({
             )}
 
             {/* End of results indicator */}
-            {!hasMoreResults && queryResults.length > 0 && (
+            {!isRealtimeStreaming && !hasMoreResults && queryResults.length > 0 && (
               <div className="text-muted-foreground py-2 text-center text-xs">
                 All {totalResults.toLocaleString()} results loaded
               </div>

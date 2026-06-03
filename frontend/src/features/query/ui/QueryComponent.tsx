@@ -1,4 +1,4 @@
-import { Play } from 'lucide-react';
+import { Play, Radio } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -64,6 +64,8 @@ interface SavedQuery {
   sortOrder: 'asc' | 'desc';
 }
 
+const MAX_LIVE_RESULTS = 5_000;
+
 export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.Element => {
   // States
   const [isShowHowToSendLogsFromCode, setIsShowHowToSendLogsFromCode] = useState(false);
@@ -81,6 +83,7 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [project, setProject] = useState<Project | undefined>();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isRealtimeStreaming, setIsRealtimeStreaming] = useState(false);
 
   // Refs
   const timeRangeRef = useRef<() => TimeRange | null>(null);
@@ -91,6 +94,7 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
   const containerRef = useRef<HTMLDivElement>(null);
   const queryBuilderRef = useRef<HTMLDivElement>(null);
   const howToSendLogsButtonRef = useRef<HTMLDivElement>(null);
+  const realtimeAbortControllerRef = useRef<AbortController | null>(null);
 
   // Onboarding functions
   const isUserNewlyRegistered = (user: UserProfile): boolean => {
@@ -255,6 +259,8 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
   };
 
   const executeQuery = async (isLoadMore = false) => {
+    stopRealtimeStreaming();
+
     // Validate query before execution (only for new queries, not load more)
     if (!isLoadMore) {
       const validation = validateQuery(currentQuery);
@@ -331,6 +337,111 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
     executeQuery(true);
   };
 
+  const stopRealtimeStreaming = () => {
+    realtimeAbortControllerRef.current?.abort();
+    realtimeAbortControllerRef.current = null;
+    setIsRealtimeStreaming(false);
+  };
+
+  const getNewestResultTimestamp = (): Date => {
+    if (queryResults.length === 0) {
+      return new Date();
+    }
+
+    return queryResults.reduce((newest, log) => {
+      const timestamp = new Date(log.timestamp);
+      return timestamp > newest ? timestamp : newest;
+    }, new Date(queryResults[0].timestamp));
+  };
+
+  const mergeRealtimeLogs = (logs: LogItem[]) => {
+    if (logs.length === 0) {
+      return;
+    }
+
+    setQueryResults((previousLogs) => {
+      const logsByID = new Map<string, LogItem>();
+      for (const log of previousLogs) {
+        logsByID.set(log.id, log);
+      }
+
+      let addedLogsCount = 0;
+      for (const log of logs) {
+        if (!logsByID.has(log.id)) {
+          addedLogsCount++;
+        }
+        logsByID.set(log.id, log);
+      }
+
+      const mergedLogs = Array.from(logsByID.values()).sort((a, b) => {
+        const left = new Date(a.timestamp).getTime();
+        const right = new Date(b.timestamp).getTime();
+        return sortOrder === 'asc' ? left - right : right - left;
+      });
+
+      setTotalResults((previousTotal) => previousTotal + addedLogsCount);
+
+      return mergedLogs.slice(0, MAX_LIVE_RESULTS);
+    });
+
+    setHasMoreResults(false);
+  };
+
+  const startRealtimeStreaming = async () => {
+    const validation = validateQuery(currentQuery);
+    if (!validation.isValid) {
+      toastMessage.error(validation.error!);
+      return;
+    }
+
+    const controller = new AbortController();
+    realtimeAbortControllerRef.current = controller;
+    setIsRealtimeStreaming(true);
+    setHasExecuted(true);
+    setHasSearched(true);
+    setHasMoreResults(false);
+
+    const startFrom = getNewestResultTimestamp();
+    const request: LogQueryRequest = {
+      query: currentQuery,
+      limit: pageSize,
+      offset: 0,
+      sortOrder: 'asc',
+      timeRange: {
+        from: startFrom.toISOString(),
+        to: new Date().toISOString(),
+      },
+    };
+
+    try {
+      await queryApi.streamQuery(projectId, request, {
+        signal: controller.signal,
+        onLogs: (response) => mergeRealtimeLogs(response.logs),
+      });
+    } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return;
+      }
+
+      const errorMessage = error instanceof Error ? error.message : 'Realtime stream failed';
+      toastMessage.error(errorMessage);
+      setIsRealtimeStreaming(false);
+    } finally {
+      if (realtimeAbortControllerRef.current === controller) {
+        realtimeAbortControllerRef.current = null;
+      }
+    }
+  };
+
+  const handleRealtimeToggle = (checked: boolean) => {
+    if (!checked) {
+      stopRealtimeStreaming();
+      return;
+    }
+
+    void startRealtimeStreaming();
+  };
+
   const handleAddFieldToQuery = (fieldName: string, fieldValue: string) => {
     const newCondition: QueryNode = {
       type: 'condition',
@@ -396,6 +507,7 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
   // useEffect hooks
   useEffect(() => {
     const initializeProject = async () => {
+      stopRealtimeStreaming();
       await Promise.all([loadProject(), loadQueryableFields()]);
 
       // Load saved query for this project
@@ -422,6 +534,8 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
     };
 
     initializeProject();
+
+    return () => stopRealtimeStreaming();
   }, [projectId]);
 
   // Auto-execute query when project is initialized
@@ -469,6 +583,7 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
           <TimeRangePickerComponent
             onChange={() => {
               setHasSearched(false);
+              stopRealtimeStreaming();
             }}
             onGetCurrentRange={(getCurrentRange: () => TimeRange | null) => {
               timeRangeRef.current = getCurrentRange;
@@ -493,6 +608,7 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
                 onCheckedChange={(checked) => {
                   setSortOrder(checked ? 'asc' : 'desc');
                   setHasSearched(false);
+                  stopRealtimeStreaming();
                 }}
                 size="sm"
               />
@@ -522,6 +638,7 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
             onChange={(query) => {
               setCurrentQuery(query);
               setHasSearched(false);
+              stopRealtimeStreaming();
             }}
             onFieldSearch={searchQueryableFields}
           />
@@ -530,6 +647,26 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
 
           {/* Execution Controls */}
           <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Radio
+                className={`size-4 ${
+                  isRealtimeStreaming ? 'text-primary' : 'text-muted-foreground'
+                }`}
+              />
+              <span
+                className={`text-sm ${
+                  isRealtimeStreaming ? 'text-foreground' : 'text-muted-foreground'
+                }`}
+              >
+                Realtime
+              </span>
+              <Switch
+                checked={isRealtimeStreaming}
+                onCheckedChange={handleRealtimeToggle}
+                disabled={isExecuting}
+                size="sm"
+              />
+            </div>
             {isExecuting ? (
               <Spinner className="ml-auto" />
             ) : (
@@ -560,6 +697,7 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
         hasMoreResults={hasMoreResults}
         onLoadMore={handleLoadMore}
         onAddFieldToQuery={handleAddFieldToQuery}
+        isRealtimeStreaming={isRealtimeStreaming}
       />
 
       {isShowHowToSendLogsFromCode && (

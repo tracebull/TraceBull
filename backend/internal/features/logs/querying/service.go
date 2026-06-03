@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	logs_core "logbull/internal/features/logs/core"
 	projects_services "logbull/internal/features/projects/services"
@@ -53,6 +54,22 @@ func (s *LogQueryService) ExecuteQuery(
 
 	response, err := s.logRepository.ExecuteQueryForProject(projectID, request)
 	return response, err
+}
+
+func (s *LogQueryService) ExecuteStreamPoll(
+	projectID uuid.UUID,
+	request *logs_core.LogQueryRequestDTO,
+	user *users_models.User,
+) (*logs_core.LogQueryResponseDTO, error) {
+	if err := s.validateQueryAccess(projectID, request.Query, user); err != nil {
+		return nil, err
+	}
+
+	if err := s.validateTimeRange(request.TimeRange); err != nil {
+		return nil, err
+	}
+
+	return s.logRepository.ExecuteQueryForProject(projectID, request)
 }
 
 func (s *LogQueryService) GetQueryableFields(
@@ -244,6 +261,48 @@ func (s *LogQueryService) CleanupPendingQueries() error {
 	}
 
 	return nil
+}
+
+func (s *LogQueryService) validateQueryAccess(
+	projectID uuid.UUID,
+	query *logs_core.QueryNode,
+	user *users_models.User,
+) error {
+	canAccess, _, err := s.projectService.CanUserAccessProject(projectID, user)
+	if err != nil {
+		return fmt.Errorf("failed to verify project access: %w", err)
+	}
+	if !canAccess {
+		return errors.New("insufficient permissions to query project logs")
+	}
+
+	if err := s.queryValidator.ValidateQuery(query); err != nil {
+		return fmt.Errorf("invalid query structure: %w", err)
+	}
+
+	return nil
+}
+
+func normalizeStreamRequest(request *logs_core.LogQueryRequestDTO) time.Time {
+	if request.Limit <= 0 || request.Limit > 500 {
+		request.Limit = 200
+	}
+
+	request.Offset = 0
+	request.SortOrder = "asc"
+
+	now := time.Now().UTC()
+	if request.TimeRange == nil {
+		request.TimeRange = &logs_core.TimeRangeDTO{}
+	}
+
+	if request.TimeRange.From == nil {
+		request.TimeRange.From = &now
+	}
+
+	request.TimeRange.To = &now
+
+	return *request.TimeRange.From
 }
 
 func (s *LogQueryService) validateTimeRange(timeRange *logs_core.TimeRangeDTO) error {
