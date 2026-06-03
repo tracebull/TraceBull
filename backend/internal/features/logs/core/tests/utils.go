@@ -111,9 +111,35 @@ func StoreTestLogsAndWait(
 	flushErr := repository.ForceFlush()
 	assert.NoError(t, flushErr, "Failed to refresh index")
 
-	for projectID, logs := range testLogEntries {
-		WaitForLogsToAppear(t, repository, projectID, int64(len(logs)), 10000)
+	for projectID := range testLogEntries {
+		WaitForLogsToBeIndexed(t, repository, projectID, 10000)
 	}
+}
+
+func WaitForLogsToBeIndexed(
+	t *testing.T,
+	repository logs_core.LogStorage,
+	projectID uuid.UUID,
+	timeoutMs int,
+) {
+	const pollIntervalMs = 50
+	maxAttempts := timeoutMs / pollIntervalMs
+
+	for range maxAttempts {
+		err := repository.ForceFlush()
+		assert.NoError(t, err)
+
+		stats, err := repository.GetProjectLogStats(projectID)
+		assert.NoError(t, err)
+
+		if stats.TotalLogs > 0 {
+			return
+		}
+
+		time.Sleep(pollIntervalMs * time.Millisecond)
+	}
+
+	t.Fatalf("Timeout: logs for project %s were not indexed after %dms", projectID, timeoutMs)
 }
 
 func CreateBatchLogEntries(
