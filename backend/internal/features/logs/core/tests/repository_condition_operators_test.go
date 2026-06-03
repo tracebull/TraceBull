@@ -1016,13 +1016,12 @@ func Test_ExecuteQueryForProject_WithLessOrEqualOperator_SystemField_ReturnsMatc
 	assert.False(t, foundPositions["after"], "Should not include the after boundary log")
 }
 
-func Test_ExecuteQueryForProject_WithRangeOperators_CustomField_ReturnsNoLogs(t *testing.T) {
+func Test_ExecuteQueryForProject_WithRangeOperators_CustomField_ReturnsMatchingLogs(t *testing.T) {
 	repository := logs_core.GetLogStorage()
 	projectID := uuid.New()
 	uniqueTestSession := uuid.New().String()[:8]
 	currentTime := time.Now().UTC()
 
-	// Create logs with custom numeric fields
 	testLogs := CreateTestLogEntriesWithUniqueFields(projectID, currentTime,
 		"Log with custom numeric field", map[string]any{
 			"test_session":  uniqueTestSession,
@@ -1032,34 +1031,38 @@ func Test_ExecuteQueryForProject_WithRangeOperators_CustomField_ReturnsNoLogs(t 
 
 	StoreTestLogsAndFlush(t, repository, testLogs)
 
-	// Test that range operators on custom fields return no results
-	rangeOperators := []logs_core.ConditionOperator{
-		logs_core.ConditionOperatorGreaterThan,
-		logs_core.ConditionOperatorGreaterOrEqual,
-		logs_core.ConditionOperatorLessThan,
-		logs_core.ConditionOperatorLessOrEqual,
-	}
-
-	for _, operator := range rangeOperators {
-		rangeQuery := &logs_core.LogQueryRequestDTO{
-			Query: &logs_core.QueryNode{
-				Type: logs_core.QueryNodeTypeCondition,
-				Condition: &logs_core.ConditionNode{
-					Field:    "custom_number",
-					Operator: operator,
-					Value:    50,
-				},
+	gtQuery := &logs_core.LogQueryRequestDTO{
+		Query: &logs_core.QueryNode{
+			Type: logs_core.QueryNodeTypeCondition,
+			Condition: &logs_core.ConditionNode{
+				Field:    "custom_number",
+				Operator: logs_core.ConditionOperatorGreaterThan,
+				Value:    50,
 			},
-			Limit: 10,
-		}
-
-		result, err := repository.ExecuteQueryForProject(projectID, rangeQuery)
-		assert.NoError(t, err)
-		assert.Equal(t, int64(0), result.Total, "Range operator %s on custom field should return 0 results", operator)
-		assert.Empty(t, result.Logs, "Range operator %s on custom field should return no logs", operator)
+		},
+		Limit: 10,
 	}
 
-	// Verify that the same logs can be found with a non-range operator
+	gtResult, err := repository.ExecuteQueryForProject(projectID, gtQuery)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), gtResult.Total, "GreaterThan on numeric custom field should return matching logs")
+
+	ltQuery := &logs_core.LogQueryRequestDTO{
+		Query: &logs_core.QueryNode{
+			Type: logs_core.QueryNodeTypeCondition,
+			Condition: &logs_core.ConditionNode{
+				Field:    "custom_number",
+				Operator: logs_core.ConditionOperatorLessThan,
+				Value:    50,
+			},
+		},
+		Limit: 10,
+	}
+
+	ltResult, err := repository.ExecuteQueryForProject(projectID, ltQuery)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(0), ltResult.Total, "LessThan on numeric custom field should return no logs when value is greater")
+
 	equalsQuery := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
 			Type: logs_core.QueryNodeTypeCondition,
@@ -1074,7 +1077,7 @@ func Test_ExecuteQueryForProject_WithRangeOperators_CustomField_ReturnsNoLogs(t 
 
 	equalsResult, err := repository.ExecuteQueryForProject(projectID, equalsQuery)
 	assert.NoError(t, err)
-	assert.Equal(t, int64(1), equalsResult.Total, "Should find the logs with non-range operator")
+	assert.Equal(t, int64(1), equalsResult.Total, "Should find the logs with equals operator")
 }
 
 // Edge Cases and Error Conditions
