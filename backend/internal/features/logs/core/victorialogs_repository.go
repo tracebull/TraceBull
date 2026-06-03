@@ -57,41 +57,52 @@ func (r *VictoriaLogsRepository) StoreLogsBatch(entries map[uuid.UUID][]*LogItem
 		return nil
 	}
 
+	for projectID, logs := range entries {
+		if err := r.storeLogsForProject(projectID, logs); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *VictoriaLogsRepository) storeLogsForProject(projectID uuid.UUID, logs []*LogItem) error {
+	if len(logs) == 0 {
+		return nil
+	}
+
+	projectIDStr := projectID.String()
 	var body strings.Builder
 
-	for projectID, logs := range entries {
-		projectIDStr := projectID.String()
+	for _, logItem := range logs {
+		body.WriteString(`{"create":{}}`)
+		body.WriteByte('\n')
 
-		for _, logItem := range logs {
-			body.WriteString(`{"create":{}}`)
-			body.WriteByte('\n')
-
-			doc := map[string]any{
-				"_msg":       logItem.Message,
-				"_time":      logItem.Timestamp.UTC().Format(time.RFC3339Nano),
-				"project_id": projectIDStr,
-				"level":      string(logItem.Level),
-				"id":         logItem.ID.String(),
-			}
-
-			if logItem.ClientIP != "" {
-				doc["client_ip"] = logItem.ClientIP
-			}
-
-			for fieldName, fieldValue := range logItem.Fields {
-				if fieldName == "project_id" || fieldName == "created_at" {
-					continue
-				}
-				doc[fieldName] = fmt.Sprintf("%v", fieldValue)
-			}
-
-			docBytes, err := json.Marshal(doc)
-			if err != nil {
-				return fmt.Errorf("failed to marshal log document: %w", err)
-			}
-			body.Write(docBytes)
-			body.WriteByte('\n')
+		doc := map[string]any{
+			"_msg":       logItem.Message,
+			"_time":      logItem.Timestamp.UTC().Format(time.RFC3339Nano),
+			"project_id": projectIDStr,
+			"level":      string(logItem.Level),
+			"id":         logItem.ID.String(),
 		}
+
+		if logItem.ClientIP != "" {
+			doc["client_ip"] = logItem.ClientIP
+		}
+
+		for fieldName, fieldValue := range logItem.Fields {
+			if fieldName == "project_id" || fieldName == "created_at" {
+				continue
+			}
+			doc[fieldName] = fmt.Sprintf("%v", fieldValue)
+		}
+
+		docBytes, err := json.Marshal(doc)
+		if err != nil {
+			return fmt.Errorf("failed to marshal log document: %w", err)
+		}
+		body.Write(docBytes)
+		body.WriteByte('\n')
 	}
 
 	req, err := http.NewRequest("POST", r.baseURL+"/insert/elasticsearch/_bulk?_stream_fields=project_id", strings.NewReader(body.String()))
