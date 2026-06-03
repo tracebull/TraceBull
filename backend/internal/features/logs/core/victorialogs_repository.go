@@ -427,6 +427,9 @@ func (r *VictoriaLogsRepository) buildLogsQL(projectID uuid.UUID, request *LogQu
 
 	if request.Query != nil {
 		if queryFilter := r.buildQueryNodeFilter(request.Query); queryFilter != "" {
+			if strings.Contains(queryFilter, " OR ") {
+				queryFilter = "(" + queryFilter + ")"
+			}
 			parts = append(parts, queryFilter)
 		}
 	}
