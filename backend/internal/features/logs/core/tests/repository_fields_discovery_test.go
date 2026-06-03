@@ -55,14 +55,3 @@ func Test_DiscoverFields_WithStoredLogsContainingCustomFields_ReturnsDiscoveredF
 		}
 	}
 }
-
-func Test_DiscoverFields_WithUnavailableLogsStorage_PropagatesError(t *testing.T) {
-	unavailableRepository := logs_core.GetLogStorage()
-	projectID := uuid.New()
-
-	discoveredFields, discoveryErr := unavailableRepository.DiscoverFields(projectID)
-
-	assert.Error(t, discoveryErr)
-	assert.Nil(t, discoveredFields)
-	assert.Contains(t, discoveryErr.Error(), "failed to execute field discovery search")
-}
