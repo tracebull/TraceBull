@@ -455,7 +455,12 @@ func Test_ExecuteQueryForProject_WithNanosecondTimestamp_PreservesFullPrecision(
 	projectID := uuid.New()
 	uniqueTestSession := uuid.New().String()[:8]
 
-	originalTimestamp := time.Date(2024, 10, 22, 14, 30, 45, 123456789, time.UTC)
+	originalTimestamp := time.Now().UTC().Add(-5 * time.Minute)
+	originalTimestamp = time.Date(
+		originalTimestamp.Year(), originalTimestamp.Month(), originalTimestamp.Day(),
+		originalTimestamp.Hour(), originalTimestamp.Minute(), originalTimestamp.Second(),
+		123456789, originalTimestamp.Location(),
+	)
 
 	testLogEntries := CreateTestLogEntriesWithUniqueFields(projectID, originalTimestamp,
 		"Nanosecond precision test log", map[string]any{
@@ -514,7 +519,12 @@ func Test_ExecuteQueryForProject_WithMultipleLogsAt2NanosecondSteps_PreservesNan
 	projectID := uuid.New()
 	uniqueTestSession := uuid.New().String()[:8]
 
-	baseTimestamp := time.Date(2024, 10, 22, 15, 45, 30, 100000000, time.UTC)
+	now := time.Now().UTC().Add(-5 * time.Minute)
+	baseTimestamp := time.Date(
+		now.Year(), now.Month(), now.Day(),
+		now.Hour(), now.Minute(), now.Second(),
+		100000000, now.Location(),
+	)
 
 	timestamps := []time.Time{
 		baseTimestamp,
