@@ -36,10 +36,12 @@ type EnvVariables struct {
 	VictoriaLogsURL  string `env:"VICTORIALOGS_URL"`
 	VictoriaLogsPort string `env:"VICTORIALOGS_PORT"`
 	// oauth
-	GitHubClientID     string `env:"GITHUB_CLIENT_ID"`
-	GitHubClientSecret string `env:"GITHUB_CLIENT_SECRET"`
-	GoogleClientID     string `env:"GOOGLE_CLIENT_ID"`
-	GoogleClientSecret string `env:"GOOGLE_CLIENT_SECRET"`
+	GitHubClientID       string `env:"GITHUB_CLIENT_ID"`
+	GitHubClientSecret   string `env:"GITHUB_CLIENT_SECRET"`
+	GoogleClientID       string `env:"GOOGLE_CLIENT_ID"`
+	GoogleClientSecret   string `env:"GOOGLE_CLIENT_SECRET"`
+	MicrosoftClientID    string `env:"MICROSOFT_CLIENT_ID"`
+	MicrosoftClientSecret string `env:"MICROSOFT_CLIENT_SECRET"`
 }
 
 var (

@@ -33,6 +33,8 @@ export function OAuthCallbackPage() {
           await userApi.handleGitHubOAuth({ code, redirectUri });
         } else if (state === 'google') {
           await userApi.handleGoogleOAuth({ code, redirectUri });
+        } else if (state === 'microsoft') {
+          await userApi.handleMicrosoftOAuth({ code, redirectUri });
         } else {
           setError('Invalid OAuth provider');
           return;

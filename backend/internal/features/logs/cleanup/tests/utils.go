@@ -84,6 +84,29 @@ func WaitForLogDeletion(
 	return stats
 }
 
+// PollForLogDeletionSilent polls until TotalLogs <= maxCount or timeout, without asserting.
+// Use this for intermediate checks in retry loops.
+func PollForLogDeletionSilent(
+	repository logs_core.LogStorage,
+	projectID uuid.UUID,
+	maxCount int64,
+	timeoutMs int,
+) *logs_core.LogsStatsDTO {
+	const pollIntervalMs = 50
+	maxAttempts := timeoutMs / pollIntervalMs
+
+	for range maxAttempts {
+		repository.ForceFlush()
+		if stats, err := repository.GetProjectLogStats(projectID); err == nil && stats.TotalLogs <= maxCount {
+			return stats
+		}
+		time.Sleep(pollIntervalMs * time.Millisecond)
+	}
+
+	stats, _ := repository.GetProjectLogStats(projectID)
+	return stats
+}
+
 func WaitForLogDeletionWithMaxCount(
 	t *testing.T,
 	repository logs_core.LogStorage,

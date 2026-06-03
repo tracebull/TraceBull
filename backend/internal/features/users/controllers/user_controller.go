@@ -32,6 +32,7 @@ func (c *UserController) RegisterRoutes(router *gin.RouterGroup) {
 	// OAuth callbacks
 	router.POST("/auth/github/callback", c.HandleGitHubOAuth)
 	router.POST("/auth/google/callback", c.HandleGoogleOAuth)
+	router.POST("/auth/microsoft/callback", c.HandleMicrosoftOAuth)
 }
 
 func (c *UserController) RegisterProtectedRoutes(router *gin.RouterGroup) {
@@ -393,6 +394,40 @@ func (c *UserController) HandleGoogleOAuth(ctx *gin.Context) {
 	}
 
 	response, err := c.userService.HandleGoogleOAuth(request.Code, request.RedirectUri)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.setSessionCookie(ctx, response.Token)
+	ctx.JSON(http.StatusOK, response)
+}
+
+// HandleMicrosoftOAuth
+// @Summary Handle Microsoft OAuth callback
+// @Description Exchange Microsoft authorization code for JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body users_dto.OAuthCallbackRequestDTO true "OAuth callback data"
+// @Success 200 {object} users_dto.OAuthCallbackResponseDTO
+// @Failure 400 {object} map[string]string
+// @Failure 501 {object} map[string]string
+// @Router /auth/microsoft/callback [post]
+func (c *UserController) HandleMicrosoftOAuth(ctx *gin.Context) {
+	env := config.GetEnv()
+	if env.MicrosoftClientID == "" || env.MicrosoftClientSecret == "" {
+		ctx.JSON(http.StatusNotImplemented, gin.H{"error": "Microsoft OAuth is not configured"})
+		return
+	}
+
+	var request user_dto.OAuthCallbackRequestDTO
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	response, err := c.userService.HandleMicrosoftOAuth(request.Code, request.RedirectUri)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

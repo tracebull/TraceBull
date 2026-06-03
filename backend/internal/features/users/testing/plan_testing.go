@@ -16,14 +16,6 @@ import (
 func CleanupPlans() {
 	db := storage.GetDb()
 
-	if err := db.Exec("UPDATE users SET plan_id = NULL WHERE plan_id IS NOT NULL").Error; err != nil {
-		panic(err)
-	}
-
-	if err := db.Exec("UPDATE projects SET plan_id = NULL WHERE plan_id IS NOT NULL").Error; err != nil {
-		panic(err)
-	}
-
 	if err := db.Exec("DELETE FROM user_plans").Error; err != nil {
 		panic(err)
 	}

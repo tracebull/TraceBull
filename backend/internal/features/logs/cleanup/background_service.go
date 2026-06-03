@@ -207,6 +207,13 @@ func (s *LogCleanupBackgroundService) enforceProjectQuotas(
 		return fmt.Errorf("failed to get project log stats: %w", err)
 	}
 
+	s.logger.Info("Checking project quota",
+		slog.String("projectId", projectID.String()),
+		slog.String("projectName", project.Name),
+		slog.Int64("maxLogsAmount", project.MaxLogsAmount),
+		slog.Int64("totalLogs", stats.TotalLogs))
+
+
 	quotaViolated := false
 
 	if project.MaxLogsAmount > 0 && stats.TotalLogs > project.MaxLogsAmount {
@@ -312,7 +319,11 @@ func (s *LogCleanupBackgroundService) calculateCutoffTimeForLogCount(
 	lastLogToDelete := response.Logs[0]
 	firstLogToKeep := response.Logs[1]
 	timeDiff := firstLogToKeep.Timestamp.Sub(lastLogToDelete.Timestamp)
-	cutoffTime := lastLogToDelete.Timestamp.Add(timeDiff / 2)
+	halfDiff := timeDiff / 2
+	if halfDiff <= 0 {
+		halfDiff = 1 * time.Nanosecond
+	}
+	cutoffTime := lastLogToDelete.Timestamp.Add(halfDiff)
 
 	return cutoffTime
 }

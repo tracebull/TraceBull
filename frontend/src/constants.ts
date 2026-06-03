@@ -2,6 +2,7 @@ interface RuntimeConfig {
   IS_CLOUD?: string;
   GITHUB_CLIENT_ID?: string;
   GOOGLE_CLIENT_ID?: string;
+  MICROSOFT_CLIENT_ID?: string;
 }
 
 declare global {
@@ -35,10 +36,13 @@ export const GITHUB_CLIENT_ID =
 export const GOOGLE_CLIENT_ID =
   window.__RUNTIME_CONFIG__?.GOOGLE_CLIENT_ID || import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
+export const MICROSOFT_CLIENT_ID =
+  window.__RUNTIME_CONFIG__?.MICROSOFT_CLIENT_ID || import.meta.env.VITE_MICROSOFT_CLIENT_ID || '';
+
 export function getOAuthRedirectUri(): string {
   return `${window.location.origin}/auth/callback`;
 }
 
 export function isOAuthEnabled(): boolean {
-  return IS_CLOUD && (!!GITHUB_CLIENT_ID || !!GOOGLE_CLIENT_ID);
+  return IS_CLOUD && (!!GITHUB_CLIENT_ID || !!GOOGLE_CLIENT_ID || !!MICROSOFT_CLIENT_ID);
 }

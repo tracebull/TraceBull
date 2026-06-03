@@ -144,6 +144,20 @@ export const userApi = {
       });
   },
 
+  async handleMicrosoftOAuth(request: OAuthCallbackRequest): Promise<OAuthCallbackResponse> {
+    const requestOptions: RequestOptions = new RequestOptions();
+    requestOptions.setBody(JSON.stringify(request));
+
+    return apiHelper
+      .fetchPostJson(`${getApplicationServer()}/api/v1/auth/microsoft/callback`, requestOptions)
+      .then((response: unknown): OAuthCallbackResponse => {
+        const typedResponse = response as OAuthCallbackResponse;
+        saveAuthorizedData(typedResponse.token, typedResponse.userId);
+        notifyAuthListeners();
+        return typedResponse;
+      });
+  },
+
   isAuthorized: (): boolean => accessTokenHelper.isAuthenticated(),
 
   logout: async () => {

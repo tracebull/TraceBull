@@ -183,3 +183,7 @@ func (s *UserPlanService) DeletePlan(
 func (s *UserPlanService) GetDefaultPlan() (*users_models.UserPlan, error) {
 	return s.userPlanRepository.GetPlanByType(users_enums.UserPlanTypeDefault)
 }
+
+func (s *UserPlanService) GetPlanByID(id uuid.UUID) (*users_models.UserPlan, error) {
+	return s.userPlanRepository.GetPlanByID(id)
+}

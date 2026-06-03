@@ -205,6 +205,18 @@ func (r *UserRepository) GetUserByGoogleOAuthID(googleID string) (*users_models.
 	return &user, nil
 }
 
+func (r *UserRepository) GetUserByMicrosoftOAuthID(microsoftID string) (*users_models.User, error) {
+	var user users_models.User
+	err := storage.GetDb().Preload("Plan").Where("microsoft_oauth_id = ?", microsoftID).First(&user).Error
+	if err == gorm.ErrRecordNotFound {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *UserRepository) LinkOAuthID(userID uuid.UUID, oauthColumn, oauthID string) error {
 	updates := map[string]any{oauthColumn: oauthID}
 	return storage.GetDb().Model(&users_models.User{}).

@@ -206,7 +206,7 @@ jobs:
       - name: Run Go tests
         run: |
           cd backend
-          go test -failfast ./internal/...
+          go test -failfast -p 1 ./internal/...
 
       - name: Stop test containers and clean up data
         if: always()

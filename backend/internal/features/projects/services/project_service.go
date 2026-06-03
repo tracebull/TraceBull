@@ -70,7 +70,10 @@ func (s *ProjectService) CreateProject(
 	var plan *users_models.UserPlan
 
 	if s.CanCreateOneMoreProjectForUserPlan(creator) {
-		plan = creator.Plan
+		plan, err = s.userPlanService.GetPlanByID(creator.Plan.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user plan: %w", err)
+		}
 	} else {
 		plan, err = s.userPlanService.GetDefaultPlan()
 		if err != nil {

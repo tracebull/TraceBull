@@ -328,6 +328,15 @@ func (r *VictoriaLogsRepository) executeDelete(logsql string) error {
 	return nil
 }
 
+func approximateLogSize(row map[string]any) int64 {
+	var size int64 = 200 // Base overhead for system fields
+	for k, v := range row {
+		size += int64(len(k))
+		size += int64(len(asString(v)))
+	}
+	return size
+}
+
 func (r *VictoriaLogsRepository) queryStats(logsql string) (*LogsStatsDTO, error) {
 	rows, err := r.executeLogSQL(logsql)
 	if err != nil {
@@ -354,8 +363,26 @@ func (r *VictoriaLogsRepository) queryStats(logsql string) (*LogsStatsDTO, error
 		stats.NewestLogTime = parseTimeField(newest)
 	}
 
+	if stats.TotalLogs > 0 {
+		baseQuery := logsql
+		if idx := strings.Index(logsql, "| stats"); idx != -1 {
+			baseQuery = logsql[:idx]
+		}
+		sampleQuery := baseQuery + " | limit 10"
+		sampleRows, err := r.executeLogSQL(sampleQuery)
+		if err == nil && len(sampleRows) > 0 {
+			var totalSampleSize int64
+			for _, sRow := range sampleRows {
+				totalSampleSize += approximateLogSize(sRow)
+			}
+			avgSize := float64(totalSampleSize) / float64(len(sampleRows))
+			stats.TotalSizeMB = (avgSize * float64(stats.TotalLogs)) / (1024 * 1024)
+		}
+	}
+
 	return stats, nil
 }
+
 
 func (r *VictoriaLogsRepository) queryTotalCount(projectID uuid.UUID, request *LogQueryRequestDTO) (int64, error) {
 	logsql := r.buildLogsQL(projectID, request)
@@ -380,10 +407,10 @@ func (r *VictoriaLogsRepository) buildLogsQL(projectID uuid.UUID, request *LogQu
 
 	if request.TimeRange != nil {
 		if request.TimeRange.From != nil {
-			parts = append(parts, fmt.Sprintf(`_time:>="%s"`, request.TimeRange.From.UTC().Format(time.RFC3339Nano)))
+			parts = append(parts, fmt.Sprintf(`_time:>=%s`, request.TimeRange.From.UTC().Format(time.RFC3339Nano)))
 		}
 		if request.TimeRange.To != nil {
-			parts = append(parts, fmt.Sprintf(`_time:<="%s"`, request.TimeRange.To.UTC().Format(time.RFC3339Nano)))
+			parts = append(parts, fmt.Sprintf(`_time:<=%s`, request.TimeRange.To.UTC().Format(time.RFC3339Nano)))
 		}
 	}
 
@@ -459,13 +486,13 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 	switch condition.Operator {
 	case ConditionOperatorEquals:
 		if fieldName == "timestamp" {
-			return fmt.Sprintf(`_time:<="%s" AND _time:>="%s"`, valueStr, valueStr)
+			return fmt.Sprintf(`_time:<=%s AND _time:>=%s`, valueStr, valueStr)
 		}
 		return fmt.Sprintf(`%s:%s`, logsQLField, escapeLogsQLValue(valueStr))
 
 	case ConditionOperatorNotEquals:
 		if fieldName == "timestamp" {
-			return fmt.Sprintf(`not (_time:<="%s" AND _time:>="%s")`, valueStr, valueStr)
+			return fmt.Sprintf(`not (_time:<=%s AND _time:>=%s)`, valueStr, valueStr)
 		}
 		return fmt.Sprintf(`not %s:%s`, logsQLField, escapeLogsQLValue(valueStr))
 
@@ -483,7 +510,7 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		if fieldName == "timestamp" {
 			var parts []string
 			for _, v := range values {
-				parts = append(parts, fmt.Sprintf(`(_time:<="%s" AND _time:>="%s")`, v, v))
+				parts = append(parts, fmt.Sprintf(`(_time:<=%s AND _time:>=%s)`, v, v))
 			}
 			return "(" + strings.Join(parts, " OR ") + ")"
 		}
@@ -513,25 +540,25 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 
 	case ConditionOperatorGreaterThan:
 		if fieldName == "timestamp" {
-			return fmt.Sprintf(`_time:>"%s"`, valueStr)
+			return fmt.Sprintf(`_time:>%s`, valueStr)
 		}
 		return fmt.Sprintf(`%s:>"%s"`, logsQLField, valueStr)
 
 	case ConditionOperatorGreaterOrEqual:
 		if fieldName == "timestamp" {
-			return fmt.Sprintf(`_time:>="%s"`, valueStr)
+			return fmt.Sprintf(`_time:>=%s`, valueStr)
 		}
 		return fmt.Sprintf(`%s:>="%s"`, logsQLField, valueStr)
 
 	case ConditionOperatorLessThan:
 		if fieldName == "timestamp" {
-			return fmt.Sprintf(`_time:<"%s"`, valueStr)
+			return fmt.Sprintf(`_time:<%s`, valueStr)
 		}
 		return fmt.Sprintf(`%s:<"%s"`, logsQLField, valueStr)
 
 	case ConditionOperatorLessOrEqual:
 		if fieldName == "timestamp" {
-			return fmt.Sprintf(`_time:<="%s"`, valueStr)
+			return fmt.Sprintf(`_time:<=%s`, valueStr)
 		}
 		return fmt.Sprintf(`%s:<="%s"`, logsQLField, valueStr)
 

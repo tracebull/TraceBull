@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import {
   GITHUB_CLIENT_ID,
   GOOGLE_CLIENT_ID,
+  MICROSOFT_CLIENT_ID,
   getOAuthRedirectUri,
   isOAuthEnabled,
 } from '../../../constants';
@@ -64,6 +65,31 @@ export function OauthComponent() {
     }
   };
 
+  const handleMicrosoftLogin = () => {
+    if (!MICROSOFT_CLIENT_ID) {
+      toastMessage.error('Microsoft OAuth is not configured');
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams({
+        client_id: MICROSOFT_CLIENT_ID,
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        scope: 'openid profile email User.Read',
+        state: 'microsoft',
+      });
+
+      const microsoftAuthUrl = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${params.toString()}`;
+
+      new URL(microsoftAuthUrl);
+      window.location.href = microsoftAuthUrl;
+    } catch (error) {
+      toastMessage.error('Invalid OAuth configuration');
+      console.error('Microsoft OAuth URL error:', error);
+    }
+  };
+
   return (
     <div className="mt-4">
       <div className="space-y-2">
@@ -97,6 +123,18 @@ export function OauthComponent() {
               />
             </svg>
             Continue with Google
+          </Button>
+        )}
+
+        {MICROSOFT_CLIENT_ID && (
+          <Button variant="outline" onClick={handleMicrosoftLogin} className="w-full" size="lg">
+            <svg className="mr-2 size-4" viewBox="0 0 24 24">
+              <path d="M11.4 24H0V12.6h11.4V24z" fill="#F1511B" />
+              <path d="M24 24H12.6V12.6H24V24z" fill="#80CC28" />
+              <path d="M11.4 11.4H0V0h11.4v11.4z" fill="#00ADEF" />
+              <path d="M24 11.4H12.6V0H24v11.4z" fill="#FBBC09" />
+            </svg>
+            Continue with Microsoft
           </Button>
         )}
       </div>

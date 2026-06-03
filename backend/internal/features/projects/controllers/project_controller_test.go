@@ -17,6 +17,7 @@ import (
 	users_models "logbull/internal/features/users/models"
 	users_services "logbull/internal/features/users/services"
 	users_testing "logbull/internal/features/users/testing"
+	"logbull/internal/storage"
 	test_utils "logbull/internal/util/testing"
 
 	"github.com/google/uuid"
@@ -874,6 +875,7 @@ func Test_CreateProject_WhenUserExceededAllowedPlanProjectsCount_ProjectReceiveD
 
 func Test_CreateProject_WhenThereAreNoPlans_ProjectCreatedWithoutPlan(t *testing.T) {
 	users_testing.CleanupPlans()
+	storage.GetDb().Exec("DELETE FROM user_plans")
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
 	defer users_testing.ResetSettingsToDefaults()

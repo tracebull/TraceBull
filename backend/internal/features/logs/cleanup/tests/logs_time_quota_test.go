@@ -34,7 +34,7 @@ func Test_EnforceLogRetention_WhenMaxLogsLifeDaysIsSet_DeletesLogsOlderThanReten
 	// Update project to set MaxLogsLifeDays to 7 days
 	updateData := &projects_models.Project{
 		Name:            project.Name,
-		MaxLogsLifeDays: 7,
+		MaxLogsLifeDays: 2,
 	}
 	projects_testing.UpdateProject(project, updateData, owner.Token, router)
 
@@ -44,8 +44,8 @@ func Test_EnforceLogRetention_WhenMaxLogsLifeDaysIsSet_DeletesLogsOlderThanReten
 
 	// Create test timestamps
 	now := time.Now().UTC()
-	oldTime := now.AddDate(0, 0, -10)   // 10 days ago (should be deleted)
-	recentTime := now.AddDate(0, 0, -5) // 5 days ago (should remain)
+	oldTime := now.AddDate(0, 0, -4)    // 4 days ago (should be deleted)
+	recentTime := now.AddDate(0, 0, -1) // 1 day ago (should remain)
 
 	// Create old logs (should be deleted)
 	oldLogEntries := logs_core_tests.CreateTestLogEntriesWithUniqueFields(
@@ -120,7 +120,7 @@ func Test_EnforceLogRetention_WhenMaxLogsLifeDaysIsZero_NoRetentionEnforcement(t
 
 	// Create test timestamps
 	now := time.Now().UTC()
-	oldTime := now.AddDate(0, 0, -30)   // 30 days ago (would normally be deleted)
+	oldTime := now.AddDate(0, 0, -4)    // 4 days ago (would normally be deleted)
 	recentTime := now.AddDate(0, 0, -1) // 1 day ago
 
 	// Create old logs (should NOT be deleted when retention is 0)
@@ -189,7 +189,7 @@ func Test_EnforceLogRetention_WhenMaxLogsLifeDaysIsNegative_NoRetentionEnforceme
 
 	// Create test timestamps
 	now := time.Now().UTC()
-	oldTime := now.AddDate(0, 0, -30)   // 30 days ago (would normally be deleted)
+	oldTime := now.AddDate(0, 0, -4)    // 4 days ago (would normally be deleted)
 	recentTime := now.AddDate(0, 0, -1) // 1 day ago
 
 	// Create old logs (should NOT be deleted when retention is negative)
@@ -257,17 +257,17 @@ func Test_EnforceProjectQuotas_WithDifferentProjectsTimeQuotas_DeletesOnlyTarget
 	project2 := projects_testing.CreateTestProject(project2Name, owner2, router)
 
 	// Set different MaxLogsLifeDays for each project
-	// Project 1: 7 days retention (should delete old logs)
+	// Project 1: 2 days retention (should delete old logs)
 	updateData1 := &projects_models.Project{
 		Name:            project1.Name,
-		MaxLogsLifeDays: 7,
+		MaxLogsLifeDays: 2,
 	}
 	projects_testing.UpdateProject(project1, updateData1, owner1.Token, router)
 
-	// Project 2: 30 days retention (should NOT delete old logs)
+	// Project 2: 5 days retention (should NOT delete old logs)
 	updateData2 := &projects_models.Project{
 		Name:            project2.Name,
-		MaxLogsLifeDays: 30,
+		MaxLogsLifeDays: 5,
 	}
 	projects_testing.UpdateProject(project2, updateData2, owner2.Token, router)
 
@@ -277,8 +277,8 @@ func Test_EnforceProjectQuotas_WithDifferentProjectsTimeQuotas_DeletesOnlyTarget
 
 	// Create test timestamps
 	now := time.Now().UTC()
-	oldTime := now.AddDate(0, 0, -10)   // 10 days ago (should be deleted from project1 but not project2)
-	recentTime := now.AddDate(0, 0, -5) // 5 days ago (should remain in both projects)
+	oldTime := now.AddDate(0, 0, -4)    // 4 days ago (should be deleted from project1 but not project2)
+	recentTime := now.AddDate(0, 0, -1) // 1 day ago (should remain in both projects)
 
 	// Create logs for Project 1
 	project1OldLogs := logs_core_tests.CreateTestLogEntriesWithUniqueFields(

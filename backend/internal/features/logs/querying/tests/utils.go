@@ -279,7 +279,7 @@ func WaitForLogsToBeIndexed(
 	uniqueID string,
 	token string,
 ) {
-	maxWaitTime := 10 * time.Second
+	maxWaitTime := 30 * time.Second
 	pollInterval := 100 * time.Millisecond
 	startTime := time.Now()
 

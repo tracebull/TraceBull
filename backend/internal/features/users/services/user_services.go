@@ -15,6 +15,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 	"golang.org/x/oauth2/google"
+	"golang.org/x/oauth2/microsoft"
 
 	"logbull/internal/config"
 	users_dto "logbull/internal/features/users/dto"
@@ -691,15 +692,95 @@ func (s *UserService) handleGoogleOAuthWithEndpoint(
 	return s.getOrCreateUserFromOAuth(googleUser.ID, googleUser.Email, name, "google")
 }
 
+func (s *UserService) HandleMicrosoftOAuth(code, redirectUri string) (*users_dto.OAuthCallbackResponseDTO, error) {
+	return s.handleMicrosoftOAuthWithEndpoint(
+		code,
+		redirectUri,
+		microsoft.AzureADEndpoint("common"),
+		"https://graph.microsoft.com/v1.0/me",
+	)
+}
+
+func (s *UserService) handleMicrosoftOAuthWithEndpoint(
+	code, redirectUri string,
+	endpoint oauth2.Endpoint,
+	userAPIURL string,
+) (*users_dto.OAuthCallbackResponseDTO, error) {
+	env := config.GetEnv()
+
+	oauthConfig := &oauth2.Config{
+		ClientID:     env.MicrosoftClientID,
+		ClientSecret: env.MicrosoftClientSecret,
+		RedirectURL:  redirectUri,
+		Endpoint:     endpoint,
+		Scopes:       []string{"openid", "profile", "email", "User.Read"},
+	}
+
+	token, err := oauthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		return nil, fmt.Errorf("failed to exchange code: %w", err)
+	}
+
+	client := oauthConfig.Client(context.Background(), token)
+	resp, err := client.Get(userAPIURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user info: %w", err)
+	}
+	defer func() {
+		_ = resp.Body.Close()
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("microsoft graph API returned status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var msUser struct {
+		ID                string  `json:"id"`
+		DisplayName       string  `json:"displayName"`
+		Mail              *string `json:"mail"`
+		UserPrincipalName string  `json:"userPrincipalName"`
+	}
+
+	if err := json.Unmarshal(body, &msUser); err != nil {
+		return nil, fmt.Errorf("failed to parse user info: %w", err)
+	}
+
+	email := ""
+	if msUser.Mail != nil && *msUser.Mail != "" {
+		email = *msUser.Mail
+	} else {
+		email = msUser.UserPrincipalName
+	}
+
+	if email == "" {
+		return nil, errors.New("microsoft account has no accessible email")
+	}
+
+	name := msUser.DisplayName
+	if name == "" {
+		name = "User"
+	}
+
+	return s.getOrCreateUserFromOAuth(msUser.ID, email, name, "microsoft")
+}
+
 func (s *UserService) getOrCreateUserFromOAuth(
 	oauthID, email, name, provider string,
 ) (*users_dto.OAuthCallbackResponseDTO, error) {
 	var existingUser *users_models.User
 	var err error
 
-	if provider == "github" {
+	switch provider {
+	case "github":
 		existingUser, err = s.userRepository.GetUserByGitHubOAuthID(oauthID)
-	} else {
+	case "microsoft":
+		existingUser, err = s.userRepository.GetUserByMicrosoftOAuthID(oauthID)
+	default:
 		existingUser, err = s.userRepository.GetUserByGoogleOAuthID(oauthID)
 	}
 
@@ -746,8 +827,11 @@ func (s *UserService) getOrCreateUserFromOAuth(
 		}
 
 		oauthColumn := "github_oauth_id"
-		if provider == "google" {
+		switch provider {
+		case "google":
 			oauthColumn = "google_oauth_id"
+		case "microsoft":
+			oauthColumn = "microsoft_oauth_id"
 		}
 
 		if err := s.userRepository.LinkOAuthID(userByEmail.ID, oauthColumn, oauthID); err != nil {
@@ -801,9 +885,13 @@ func (s *UserService) getOrCreateUserFromOAuth(
 
 	var githubOAuthID *string
 	var googleOAuthID *string
-	if provider == "github" {
+	var microsoftOAuthID *string
+	switch provider {
+	case "github":
 		githubOAuthID = &oauthID
-	} else {
+	case "microsoft":
+		microsoftOAuthID = &oauthID
+	default:
 		googleOAuthID = &oauthID
 	}
 
@@ -818,6 +906,7 @@ func (s *UserService) getOrCreateUserFromOAuth(
 		Status:               users_enums.UserStatusActive,
 		GitHubOAuthID:        githubOAuthID,
 		GoogleOAuthID:        googleOAuthID,
+		MicrosoftOAuthID:     microsoftOAuthID,
 		CreatedAt:            time.Now().UTC(),
 	}
 
