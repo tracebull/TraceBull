@@ -99,7 +99,7 @@ func StoreTestLogsAndFlush(
 	flushErr := repository.ForceFlush()
 	assert.NoError(t, flushErr, "Failed to refresh index")
 
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(2 * time.Second)
 }
 
 func CreateBatchLogEntries(
