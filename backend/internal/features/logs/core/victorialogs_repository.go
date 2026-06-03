@@ -518,7 +518,7 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		for i, v := range values {
 			quoted[i] = escapeLogsQLValue(v)
 		}
-		return fmt.Sprintf(`%s IN (%s)`, logsQLField, strings.Join(quoted, ", "))
+		return fmt.Sprintf(`%s:(%s)`, logsQLField, strings.Join(quoted, " OR "))
 
 	case ConditionOperatorNotIn:
 		values := asStringSlice(condition.Value)
