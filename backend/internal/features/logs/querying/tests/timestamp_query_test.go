@@ -1,6 +1,7 @@
 package logs_querying_tests
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"testing"
@@ -10,6 +11,7 @@ import (
 	projects_testing "logbull/internal/features/projects/testing"
 	users_enums "logbull/internal/features/users/enums"
 	users_testing "logbull/internal/features/users/testing"
+	test_utils "logbull/internal/util/testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -330,20 +332,47 @@ func storeLogEntriesWithTimestamp(
 	assert.NoError(t, err, "Failed to store logs with timestamp %v", timestamp)
 }
 
-// waitForTimestampLogsIndexing waits for logs to be indexed with debug output if needed
 func waitForTimestampLogsIndexing(t *testing.T, router *gin.Engine, projectID uuid.UUID, uniqueID, token string) {
 	err := logs_core.GetLogStorage().ForceFlush()
 	assert.NoError(t, err, "Failed to flush logs")
 
-	time.Sleep(100 * time.Millisecond)
+	maxWait := 30 * time.Second
+	pollInterval := 100 * time.Millisecond
+	deadline := time.Now().Add(maxWait)
 
-	// Quick verification that logs are indexed
-	query := BuildSimpleConditionQuery("test_id", "equals", uniqueID)
-	response := ExecuteTestQuery(t, router, projectID, query, token, http.StatusOK)
+	to := time.Now().UTC()
+	from := to.Add(-24 * time.Hour)
 
-	if len(response.Logs) == 0 {
-		t.Logf("Warning: No logs found during indexing wait - log storage may need more time")
-	} else {
-		t.Logf("Successfully indexed %d logs with test_id: %s", len(response.Logs), uniqueID)
+	for time.Now().Before(deadline) {
+		query := &logs_core.LogQueryRequestDTO{
+			Query: BuildCondition("test_id", "equals", uniqueID),
+			TimeRange: &logs_core.TimeRangeDTO{
+				From: &from,
+				To:   &to,
+			},
+			Limit: 100,
+		}
+
+		resp := test_utils.MakeRequest(t, router, test_utils.RequestOptions{
+			Method: "POST",
+			URL:    fmt.Sprintf("/api/v1/logs/query/execute/%s", projectID.String()),
+			Headers: map[string]string{
+				"Authorization": "Bearer " + token,
+			},
+			Body:           query,
+			ExpectedStatus: 0,
+		})
+
+		if resp.StatusCode == 200 {
+			var queryResponse logs_core.LogQueryResponseDTO
+			if err := json.Unmarshal(resp.Body, &queryResponse); err == nil && len(queryResponse.Logs) >= 2 {
+				t.Logf("Successfully indexed %d logs with test_id: %s", len(queryResponse.Logs), uniqueID)
+				return
+			}
+		}
+
+		time.Sleep(pollInterval)
 	}
+
+	t.Fatalf("Logs not indexed after %v (uniqueID: %s)", maxWait, uniqueID)
 }
