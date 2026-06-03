@@ -1157,7 +1157,7 @@ func Test_ExecuteQueryForProject_WithSpecialCharactersInValue_ReturnsMatchingLog
 			Condition: &logs_core.ConditionNode{
 				Field:    "message",
 				Operator: logs_core.ConditionOperatorContains,
-				Value:    "@user#123",
+				Value:    "@#$%^",
 			},
 		},
 		Limit: 10,
