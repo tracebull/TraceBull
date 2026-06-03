@@ -131,6 +131,12 @@ func (c *LogQueryController) StreamQuery(ctx *gin.Context) {
 		case <-ticker.C:
 			now := time.Now().UTC()
 			from := lastSeen.Add(time.Nanosecond)
+			if !from.Before(now) {
+				writeSSEComment(ctx, "heartbeat")
+				flusher.Flush()
+				continue
+			}
+
 			streamRequest := request
 			streamRequest.TimeRange = &logs_core.TimeRangeDTO{
 				From: &from,

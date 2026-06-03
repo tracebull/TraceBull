@@ -84,17 +84,20 @@ export const queryApi = {
       onLogs: (response: LogQueryResponse) => void;
     },
   ): Promise<void> {
-    const response = await fetch(`${getApplicationServer()}/api/v1/logs/query/stream/${projectId}`, {
-      method: 'POST',
-      headers: {
-        Accept: 'text/event-stream',
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${getApplicationServer()}/api/v1/logs/query/stream/${projectId}`,
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'text/event-stream',
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        cache: 'no-cache',
+        body: JSON.stringify(request),
+        signal: options.signal,
       },
-      credentials: 'include',
-      cache: 'no-cache',
-      body: JSON.stringify(request),
-      signal: options.signal,
-    });
+    );
 
     if (response.status === 401) {
       accessTokenHelper.clearUserId();
