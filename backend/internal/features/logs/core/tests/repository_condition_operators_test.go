@@ -43,6 +43,7 @@ func Test_ExecuteQueryForProject_WithNotEqualsOperator_ReturnsNonMatchingLogs(t 
 	allEntries := MergeLogEntries(matchingLogEntries, nonMatchingLogEntries1)
 	allEntries = MergeLogEntries(allEntries, nonMatchingLogEntries2)
 	StoreTestLogsAndFlush(t, repository, allEntries)
+	WaitForLogsToAppear(t, repository, projectID, 3, 10000)
 
 	// Test not_equals on custom field
 	notEqualsQuery := &logs_core.LogQueryRequestDTO{
