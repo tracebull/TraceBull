@@ -178,7 +178,7 @@ func (r *VictoriaLogsRepository) ExecuteQueryForProject(
 
 func (r *VictoriaLogsRepository) DiscoverFields(projectID uuid.UUID) ([]string, error) {
 	form := url.Values{}
-	form.Set("query", fmt.Sprintf(`{project_id="%s"}`, projectID.String()))
+	form.Set("query", fmt.Sprintf(`_stream:{project_id="%s"}`, projectID.String()))
 
 	req, err := http.NewRequest("POST", r.baseURL+"/select/logsql/field_names", strings.NewReader(form.Encode()))
 	if err != nil {
@@ -229,17 +229,17 @@ func (r *VictoriaLogsRepository) ForceFlush() error {
 }
 
 func (r *VictoriaLogsRepository) DeleteLogsByProject(projectID uuid.UUID) error {
-	logsql := fmt.Sprintf(`{project_id="%s"}`, projectID.String())
+	logsql := fmt.Sprintf(`_stream:{project_id="%s"}`, projectID.String())
 	return r.executeDelete(logsql)
 }
 
 func (r *VictoriaLogsRepository) DeleteOldLogs(projectID uuid.UUID, olderThan time.Time) error {
-	logsql := fmt.Sprintf(`{project_id="%s"} _time:<"%s"`, projectID.String(), olderThan.UTC().Format(time.RFC3339Nano))
+	logsql := fmt.Sprintf(`_stream:{project_id="%s"} AND _time:<"%s"`, projectID.String(), olderThan.UTC().Format(time.RFC3339Nano))
 	return r.executeDelete(logsql)
 }
 
 func (r *VictoriaLogsRepository) GetProjectLogStats(projectID uuid.UUID) (*LogsStatsDTO, error) {
-	logsql := fmt.Sprintf(`{project_id="%s"} | stats count() as total, min(_time) as oldest, max(_time) as newest`, projectID.String())
+	logsql := fmt.Sprintf(`_stream:{project_id="%s"} | stats count() as total, min(_time) as oldest, max(_time) as newest`, projectID.String())
 	return r.queryStats(logsql)
 }
 
@@ -414,7 +414,7 @@ func (r *VictoriaLogsRepository) queryTotalCount(projectID uuid.UUID, request *L
 func (r *VictoriaLogsRepository) buildLogsQL(projectID uuid.UUID, request *LogQueryRequestDTO) string {
 	var parts []string
 
-	parts = append(parts, fmt.Sprintf(`{project_id="%s"}`, projectID.String()))
+	parts = append(parts, fmt.Sprintf(`_stream:{project_id="%s"}`, projectID.String()))
 
 	if request.TimeRange != nil {
 		if request.TimeRange.From != nil {
@@ -431,7 +431,7 @@ func (r *VictoriaLogsRepository) buildLogsQL(projectID uuid.UUID, request *LogQu
 		}
 	}
 
-	return strings.Join(parts, " ")
+	return strings.Join(parts, " AND ")
 }
 
 func (r *VictoriaLogsRepository) buildQueryNodeFilter(node *QueryNode) string {

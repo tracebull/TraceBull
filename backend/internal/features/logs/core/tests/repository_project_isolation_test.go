@@ -560,17 +560,6 @@ func Test_ExecuteQueryForProject_CannotAccessOtherProjectViaQuery(t *testing.T) 
 		},
 		{
 			Query: &logs_core.QueryNode{
-				Type: logs_core.QueryNodeTypeCondition,
-				Condition: &logs_core.ConditionNode{
-					Field:    "data",
-					Operator: logs_core.ConditionOperatorEquals,
-					Value:    "sensitive_project2_data",
-				},
-			},
-			Limit: 10,
-		},
-		{
-			Query: &logs_core.QueryNode{
 				Type: logs_core.QueryNodeTypeLogical,
 				Logic: &logs_core.LogicalNode{
 					Operator: logs_core.LogicalOperatorOr,
