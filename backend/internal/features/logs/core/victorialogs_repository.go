@@ -532,9 +532,15 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		return fmt.Sprintf(`%s:!~".*(%s).*"`, logsQLField, strings.Join(escaped, "|"))
 
 	case ConditionOperatorExists:
+		if fieldName == "timestamp" {
+			return `_time:>=0s`
+		}
 		return fmt.Sprintf(`%s:*`, logsQLField)
 
 	case ConditionOperatorNotExists:
+		if fieldName == "timestamp" {
+			return `NOT (_time:>=0s)`
+		}
 		return fmt.Sprintf(`NOT (%s:*)`, logsQLField)
 
 	case ConditionOperatorGreaterThan:
