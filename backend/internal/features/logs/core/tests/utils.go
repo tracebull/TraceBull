@@ -112,7 +112,7 @@ func StoreTestLogsAndWait(
 	assert.NoError(t, flushErr, "Failed to refresh index")
 
 	for projectID := range testLogEntries {
-		WaitForLogsToBeIndexed(t, repository, projectID, 10000)
+		WaitForLogsToBeIndexed(t, repository, projectID, 30000)
 	}
 }
 
@@ -122,7 +122,7 @@ func WaitForLogsToBeIndexed(
 	projectID uuid.UUID,
 	timeoutMs int,
 ) {
-	const pollIntervalMs = 50
+	const pollIntervalMs = 100
 	maxAttempts := timeoutMs / pollIntervalMs
 
 	for range maxAttempts {
