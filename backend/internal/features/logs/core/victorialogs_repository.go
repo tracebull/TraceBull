@@ -494,13 +494,13 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		if fieldName == "timestamp" {
 			return fmt.Sprintf(`NOT (_time:<=%s AND _time:>=%s)`, valueStr, valueStr)
 		}
-		return fmt.Sprintf(`NOT %s:%s`, logsQLField, escapeLogsQLValue(valueStr))
+		return fmt.Sprintf(`%s:!=%s`, logsQLField, escapeLogsQLValue(valueStr))
 
 	case ConditionOperatorContains:
 		return fmt.Sprintf(`%s:~".*%s.*"`, logsQLField, escapeLogsQLRegex(valueStr))
 
 	case ConditionOperatorNotContains:
-		return fmt.Sprintf(`NOT %s:~".*%s.*"`, logsQLField, escapeLogsQLRegex(valueStr))
+		return fmt.Sprintf(`%s:!~".*%s.*"`, logsQLField, escapeLogsQLRegex(valueStr))
 
 	case ConditionOperatorIn:
 		values := asStringSlice(condition.Value)
@@ -530,13 +530,13 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 			Operator: ConditionOperatorIn,
 			Value:    condition.Value,
 		}
-		return "NOT " + r.buildConditionFilter(inCondition)
+		return "NOT (" + r.buildConditionFilter(inCondition) + ")"
 
 	case ConditionOperatorExists:
 		return fmt.Sprintf(`%s:*`, logsQLField)
 
 	case ConditionOperatorNotExists:
-		return fmt.Sprintf(`NOT %s:*`, logsQLField)
+		return fmt.Sprintf(`NOT (%s:*)`, logsQLField)
 
 	case ConditionOperatorGreaterThan:
 		if fieldName == "timestamp" {
