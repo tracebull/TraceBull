@@ -512,25 +512,24 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 			for _, v := range values {
 				parts = append(parts, fmt.Sprintf(`(_time:<=%s AND _time:>=%s)`, v, v))
 			}
-			return "(" + strings.Join(parts, " OR ") + ")"
+			return "(" + strings.Join(parts, " or ") + ")"
 		}
-		quoted := make([]string, len(values))
+		escaped := make([]string, len(values))
 		for i, v := range values {
-			quoted[i] = escapeLogsQLValue(v)
+			escaped[i] = escapeLogsQLRegex(v)
 		}
-		return fmt.Sprintf(`%s:(%s)`, logsQLField, strings.Join(quoted, " or "))
+		return fmt.Sprintf(`%s:~"^(%s)$"`, logsQLField, strings.Join(escaped, "|"))
 
 	case ConditionOperatorNotIn:
 		values := asStringSlice(condition.Value)
 		if len(values) == 0 {
 			return ""
 		}
-		inCondition := &ConditionNode{
-			Field:    fieldName,
-			Operator: ConditionOperatorIn,
-			Value:    condition.Value,
+		escaped := make([]string, len(values))
+		for i, v := range values {
+			escaped[i] = escapeLogsQLRegex(v)
 		}
-		return "NOT (" + r.buildConditionFilter(inCondition) + ")"
+		return fmt.Sprintf(`%s:!~"^(%s)$"`, logsQLField, strings.Join(escaped, "|"))
 
 	case ConditionOperatorExists:
 		return fmt.Sprintf(`%s:*`, logsQLField)
