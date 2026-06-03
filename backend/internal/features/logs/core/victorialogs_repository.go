@@ -518,7 +518,7 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		for i, v := range values {
 			escaped[i] = escapeLogsQLRegex(v)
 		}
-		return fmt.Sprintf(`%s:~"^(%s)$"`, logsQLField, strings.Join(escaped, "|"))
+		return fmt.Sprintf(`%s:~"(%s)"`, logsQLField, strings.Join(escaped, "|"))
 
 	case ConditionOperatorNotIn:
 		values := asStringSlice(condition.Value)
@@ -529,7 +529,7 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		for i, v := range values {
 			escaped[i] = escapeLogsQLRegex(v)
 		}
-		return fmt.Sprintf(`%s:!~"^(%s)$"`, logsQLField, strings.Join(escaped, "|"))
+		return fmt.Sprintf(`%s:!~"(%s)"`, logsQLField, strings.Join(escaped, "|"))
 
 	case ConditionOperatorExists:
 		return fmt.Sprintf(`%s:*`, logsQLField)
