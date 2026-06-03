@@ -619,7 +619,7 @@ func (r *VictoriaLogsRepository) parseLogRow(row map[string]any) LogItemDTO {
 		if victoriaLogsSystemFields[k] {
 			continue
 		}
-		if k == "id" || k == "level" || k == "client_ip" {
+		if k == "id" || k == "level" || k == "client_ip" || k == "project_id" {
 			continue
 		}
 		fieldNames = append(fieldNames, k)
