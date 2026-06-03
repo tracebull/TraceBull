@@ -511,10 +511,10 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		return fmt.Sprintf(`%s:!=%s`, logsQLField, escapeLogsQLValue(valueStr))
 
 	case ConditionOperatorContains:
-		return fmt.Sprintf(`%s:~".*%s.*"`, logsQLField, escapeLogsQLRegex(valueStr))
+		return fmt.Sprintf(`%s:*%s*`, logsQLField, escapeLogsQLSubstring(valueStr))
 
 	case ConditionOperatorNotContains:
-		return fmt.Sprintf(`%s:!~".*%s.*"`, logsQLField, escapeLogsQLRegex(valueStr))
+		return fmt.Sprintf(`NOT (%s:*%s*)`, logsQLField, escapeLogsQLSubstring(valueStr))
 
 	case ConditionOperatorIn:
 		values := asStringSlice(condition.Value)
@@ -643,6 +643,14 @@ func (r *VictoriaLogsRepository) parseLogRow(row map[string]any) LogItemDTO {
 
 func escapeLogsQLValue(value string) string {
 	return strconv.Quote(value)
+}
+
+func escapeLogsQLSubstring(value string) string {
+	r := strings.NewReplacer(
+		`*`, ``,
+		`"`, ``,
+	)
+	return r.Replace(value)
 }
 
 func escapeLogsQLRegex(value string) string {
