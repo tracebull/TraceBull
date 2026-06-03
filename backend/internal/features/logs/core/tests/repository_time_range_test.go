@@ -13,13 +13,16 @@ import (
 func Test_ExecuteQueryForProject_WithSpecificTimeRange_ReturnsOnlyLogsInRange(t *testing.T) {
 	repository := logs_core.GetLogStorage()
 	projectID := uuid.New()
+	uniqueTestSession := uuid.New().String()[:8]
 
 	currentTime := time.Now().UTC()
 	oldLogTime := currentTime.Add(-48 * time.Hour)
 	recentLogTime := currentTime.Add(-2 * time.Hour)
 
-	oldLogEntries := CreateTestLogEntriesWithTimestamp(projectID, oldLogTime, "Old log message")
-	recentLogEntries := CreateTestLogEntriesWithTimestamp(projectID, recentLogTime, "Recent log message")
+	oldLogEntries := CreateTestLogEntriesWithMessageAndFields(projectID, oldLogTime, "Old log message",
+		map[string]any{"test_session": uniqueTestSession})
+	recentLogEntries := CreateTestLogEntriesWithMessageAndFields(projectID, recentLogTime, "Recent log message",
+		map[string]any{"test_session": uniqueTestSession})
 
 	oldStoreErr := repository.StoreLogsBatch(oldLogEntries)
 	assert.NoError(t, oldStoreErr, "Failed to store old test data")
@@ -27,8 +30,7 @@ func Test_ExecuteQueryForProject_WithSpecificTimeRange_ReturnsOnlyLogsInRange(t 
 	recentStoreErr := repository.StoreLogsBatch(recentLogEntries)
 	assert.NoError(t, recentStoreErr, "Failed to store recent test data")
 
-	flushErr := repository.ForceFlush()
-	assert.NoError(t, flushErr, "Failed to refresh index")
+	WaitForLogsToBeQueryable(t, repository, projectID, 2, 30_000)
 
 	timeRangeStart := currentTime.Add(-4 * time.Hour)
 	timeRangeEnd := currentTime
@@ -53,7 +55,6 @@ func Test_ExecuteQueryForProject_WithSpecificTimeRange_ReturnsOnlyLogsInRange(t 
 	assert.NoError(t, timeRangeErr, "Failed to execute time range query")
 	assert.NotNil(t, timeRangeResult)
 
-	// Verify all returned logs are within the specified time range
 	for _, logEntry := range timeRangeResult.Logs {
 		assert.True(t, logEntry.Timestamp.After(timeRangeStart) || logEntry.Timestamp.Equal(timeRangeStart),
 			"Log timestamp %v should be after or equal to range start %v", logEntry.Timestamp, timeRangeStart)

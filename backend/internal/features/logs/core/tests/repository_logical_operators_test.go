@@ -20,6 +20,8 @@ func Test_ExecuteQueryForProject_WithLogicalOrAndNotOperators_ReturnsMatchingLog
 	testLogEntries := CreateBatchLogEntries(projectID, 4, currentTime, uniqueTestSession)
 	StoreTestLogsAndFlush(t, repository, testLogEntries)
 
+	WaitForLogsToBeQueryable(t, repository, projectID, 4, 30_000)
+
 	logicalQueryRequest := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
 			Type: logs_core.QueryNodeTypeLogical,

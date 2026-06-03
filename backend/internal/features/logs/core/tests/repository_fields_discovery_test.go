@@ -33,8 +33,7 @@ func Test_DiscoverFields_WithStoredLogsContainingCustomFields_ReturnsDiscoveredF
 	storeErr := repository.StoreLogsBatch(testLogEntries)
 	assert.NoError(t, storeErr)
 
-	flushErr := repository.ForceFlush()
-	assert.NoError(t, flushErr)
+	WaitForLogsToBeQueryable(t, repository, projectID, 1, 30_000)
 
 	discoveredFields, discoveryErr := repository.DiscoverFields(projectID)
 

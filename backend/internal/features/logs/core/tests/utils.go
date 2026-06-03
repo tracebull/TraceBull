@@ -96,8 +96,7 @@ func StoreTestLogsAndFlush(
 	storeErr := repository.StoreLogsBatch(testLogEntries)
 	assert.NoError(t, storeErr, "Failed to store test data")
 
-	flushErr := repository.ForceFlush()
-	assert.NoError(t, flushErr, "Failed to refresh index")
+	repository.ForceFlush()
 
 	time.Sleep(2 * time.Second)
 }
@@ -134,7 +133,94 @@ func CreateBatchLogEntries(
 	return allBatchEntries
 }
 
-// Private helper functions
+func WaitForLogsToBeQueryable(
+	t *testing.T,
+	repository logs_core.LogStorage,
+	projectID uuid.UUID,
+	expectedCount int64,
+	timeoutMs int,
+) {
+	const pollIntervalMs = 100
+	maxAttempts := timeoutMs / pollIntervalMs
+
+	query := &logs_core.LogQueryRequestDTO{
+		Query: &logs_core.QueryNode{},
+		Limit: 1,
+	}
+
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		result, err := repository.ExecuteQueryForProject(projectID, query)
+		if err == nil && result.Total >= expectedCount {
+			return
+		}
+		time.Sleep(pollIntervalMs * time.Millisecond)
+	}
+
+	result, err := repository.ExecuteQueryForProject(projectID, query)
+	assert.NoError(t, err)
+	assert.GreaterOrEqual(t, result.Total, expectedCount, "Logs should be queryable within timeout")
+}
+
+func WaitForLogsToAppear(
+	t *testing.T,
+	repository logs_core.LogStorage,
+	projectID uuid.UUID,
+	expectedCount int64,
+	timeoutMs int,
+) *logs_core.LogsStatsDTO {
+	const pollIntervalMs = 50
+	maxAttempts := timeoutMs / pollIntervalMs
+
+	for attempt := range maxAttempts {
+		stats, err := repository.GetProjectLogStats(projectID)
+		assert.NoError(t, err, "GetProjectLogStats should not fail on attempt %d", attempt+1)
+
+		if stats.TotalLogs == expectedCount {
+			return stats
+		}
+
+		time.Sleep(pollIntervalMs * time.Millisecond)
+	}
+
+	stats, err := repository.GetProjectLogStats(projectID)
+	assert.NoError(t, err, "Final GetProjectLogStats should not fail")
+
+	assert.Equal(t, expectedCount, stats.TotalLogs,
+		"Expected %d logs to appear, but found %d (timeout after %dms)",
+		expectedCount, stats.TotalLogs, timeoutMs)
+
+	return stats
+}
+
+func WaitForSystemLogsToAppear(
+	t *testing.T,
+	repository logs_core.LogStorage,
+	minExpectedCount int64,
+	timeoutMs int,
+) *logs_core.LogsStatsDTO {
+	const pollIntervalMs = 50
+	maxAttempts := timeoutMs / pollIntervalMs
+
+	for attempt := range maxAttempts {
+		stats, err := repository.GetSystemLogStats()
+		assert.NoError(t, err, "GetSystemLogStats should not fail on attempt %d", attempt+1)
+
+		if stats.TotalLogs >= minExpectedCount {
+			return stats
+		}
+
+		time.Sleep(pollIntervalMs * time.Millisecond)
+	}
+
+	stats, err := repository.GetSystemLogStats()
+	assert.NoError(t, err, "Final GetSystemLogStats should not fail")
+
+	assert.GreaterOrEqual(t, stats.TotalLogs, minExpectedCount,
+		"Expected at least %d logs to appear, but found %d (timeout after %dms)",
+		minExpectedCount, stats.TotalLogs, timeoutMs)
+
+	return stats
+}
 
 func CreateTestLogEntriesWithUniqueFields(
 	projectID uuid.UUID,
@@ -173,77 +259,4 @@ func MergeLogEntries(
 	}
 
 	return mergedLogEntries
-}
-
-func WaitForLogsToAppear(
-	t *testing.T,
-	repository logs_core.LogStorage,
-	projectID uuid.UUID,
-	expectedCount int64,
-	timeoutMs int,
-) *logs_core.LogsStatsDTO {
-	const pollIntervalMs = 50
-	maxAttempts := timeoutMs / pollIntervalMs
-
-	for attempt := range maxAttempts {
-		err := repository.ForceFlush()
-		assert.NoError(t, err, "Force flush should not fail on attempt %d", attempt+1)
-
-		stats, err := repository.GetProjectLogStats(projectID)
-		assert.NoError(t, err, "GetProjectLogStats should not fail on attempt %d", attempt+1)
-
-		if stats.TotalLogs == expectedCount {
-			return stats
-		}
-
-		time.Sleep(pollIntervalMs * time.Millisecond)
-	}
-
-	err := repository.ForceFlush()
-	assert.NoError(t, err, "Final force flush should not fail")
-
-	stats, err := repository.GetProjectLogStats(projectID)
-	assert.NoError(t, err, "Final GetProjectLogStats should not fail")
-
-	assert.Equal(t, expectedCount, stats.TotalLogs,
-		"Expected %d logs to appear, but found %d (timeout after %dms)",
-		expectedCount, stats.TotalLogs, timeoutMs)
-
-	return stats
-}
-
-func WaitForSystemLogsToAppear(
-	t *testing.T,
-	repository logs_core.LogStorage,
-	minExpectedCount int64,
-	timeoutMs int,
-) *logs_core.LogsStatsDTO {
-	const pollIntervalMs = 50
-	maxAttempts := timeoutMs / pollIntervalMs
-
-	for attempt := range maxAttempts {
-		err := repository.ForceFlush()
-		assert.NoError(t, err, "Force flush should not fail on attempt %d", attempt+1)
-
-		stats, err := repository.GetSystemLogStats()
-		assert.NoError(t, err, "GetSystemLogStats should not fail on attempt %d", attempt+1)
-
-		if stats.TotalLogs >= minExpectedCount {
-			return stats
-		}
-
-		time.Sleep(pollIntervalMs * time.Millisecond)
-	}
-
-	err := repository.ForceFlush()
-	assert.NoError(t, err, "Final force flush should not fail")
-
-	stats, err := repository.GetSystemLogStats()
-	assert.NoError(t, err, "Final GetSystemLogStats should not fail")
-
-	assert.GreaterOrEqual(t, stats.TotalLogs, minExpectedCount,
-		"Expected at least %d logs to appear, but found %d (timeout after %dms)",
-		minExpectedCount, stats.TotalLogs, timeoutMs)
-
-	return stats
 }

@@ -24,16 +24,17 @@ func Test_ExecuteQueryForProject_WithLogicalAndConditions_ReturnsMatchingLogs(t 
 			"test_session": uniqueTestSession,
 		})
 
-	// Create a non-matching log to ensure filtering works
 	nonMatchingEntries := CreateTestLogEntriesWithUniqueFields(projectID, currentTime,
 		"Different message", map[string]any{
-			"environment":  "staging", // Different environment
+			"environment":  "staging",
 			"service":      "other-api",
 			"test_session": uniqueTestSession,
 		})
 
 	allEntries := MergeLogEntries(testLogEntries, nonMatchingEntries)
 	StoreTestLogsAndFlush(t, repository, allEntries)
+
+	WaitForLogsToBeQueryable(t, repository, projectID, 2, 30_000)
 
 	logicalAndQuery := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
@@ -60,11 +61,9 @@ func Test_ExecuteQueryForProject_WithLogicalAndConditions_ReturnsMatchingLogs(t 
 	assert.NoError(t, queryErr)
 	assert.NotNil(t, queryResult)
 
-	// Validate that we got exactly 1 matching log (only the production/login one)
 	assert.Equal(t, int64(1), queryResult.Total, "Should find exactly 1 log matching all AND conditions")
 	assert.Len(t, queryResult.Logs, 1, "Should return exactly 1 log")
 
-	// Validate the returned log matches all our conditions
 	matchedLog := queryResult.Logs[0]
 	assert.Contains(t, matchedLog.Message, "login", "Message should contain 'login'")
 	assert.Equal(t, "production", matchedLog.Fields["environment"], "Environment should be 'production'")
@@ -79,7 +78,6 @@ func Test_ExecuteQueryForProject_WithSingleCondition_ReturnsMatchingLogs(t *test
 	differentTestSession := uuid.New().String()[:8]
 	currentTime := time.Now().UTC()
 
-	// Create multiple logs - some matching, some not matching
 	matchingLogEntries := CreateTestLogEntriesWithUniqueFields(projectID, currentTime,
 		"API request processed", map[string]any{
 			"service":      "payment-api",
@@ -91,19 +89,21 @@ func Test_ExecuteQueryForProject_WithSingleCondition_ReturnsMatchingLogs(t *test
 		"Another matching request", map[string]any{
 			"service":      "user-api",
 			"status_code":  201,
-			"test_session": uniqueTestSession, // Same test session
+			"test_session": uniqueTestSession,
 		})
 
 	nonMatchingLogEntries := CreateTestLogEntriesWithUniqueFields(projectID, currentTime.Add(2*time.Second),
 		"Non-matching request", map[string]any{
 			"service":      "other-api",
 			"status_code":  404,
-			"test_session": differentTestSession, // Different test session
+			"test_session": differentTestSession,
 		})
 
 	allEntries := MergeLogEntries(matchingLogEntries, matchingLogEntries2)
 	allEntries = MergeLogEntries(allEntries, nonMatchingLogEntries)
 	StoreTestLogsAndFlush(t, repository, allEntries)
+
+	WaitForLogsToBeQueryable(t, repository, projectID, 3, 30_000)
 
 	singleConditionQuery := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
@@ -121,20 +121,16 @@ func Test_ExecuteQueryForProject_WithSingleCondition_ReturnsMatchingLogs(t *test
 	assert.NoError(t, queryErr)
 	assert.NotNil(t, queryResult)
 
-	// Validate we got exactly the 2 matching logs
 	assert.Equal(t, int64(2), queryResult.Total, "Should find exactly 2 logs with matching test_session")
 	assert.Len(t, queryResult.Logs, 2, "Should return exactly 2 logs")
 
-	// Validate all returned logs have the correct test_session
 	for i, log := range queryResult.Logs {
 		assert.Equal(t, uniqueTestSession, log.Fields["test_session"],
 			"Log %d should have the correct test_session", i)
-		// Ensure we didn't get the non-matching log
 		assert.NotEqual(t, differentTestSession, log.Fields["test_session"],
 			"Should not return logs with different test_session")
 	}
 
-	// Validate we got the expected messages (order may vary)
 	messages := make([]string, len(queryResult.Logs))
 	for i, log := range queryResult.Logs {
 		messages[i] = log.Message
@@ -150,7 +146,6 @@ func Test_DiscoverFields_WithCustomFieldsInLogs_ReturnsDiscoveredFields(t *testi
 	uniqueTestSession := uuid.New().String()[:8]
 	currentTime := time.Now().UTC()
 
-	// Create logs with multiple different custom fields to test field discovery
 	testLogEntries1 := CreateTestLogEntriesWithUniqueFields(projectID, currentTime,
 		"Field discovery test log 1", map[string]any{
 			"custom_field_one": "value_" + uniqueTestSession,
@@ -170,21 +165,20 @@ func Test_DiscoverFields_WithCustomFieldsInLogs_ReturnsDiscoveredFields(t *testi
 	allEntries := MergeLogEntries(testLogEntries1, testLogEntries2)
 	StoreTestLogsAndFlush(t, repository, allEntries)
 
+	WaitForLogsToBeQueryable(t, repository, projectID, 2, 30_000)
+
 	discoveredFields, discoveryErr := repository.DiscoverFields(projectID)
 	assert.NoError(t, discoveryErr)
 	assert.NotNil(t, discoveredFields)
 	assert.IsType(t, []string{}, discoveredFields)
 
-	// Validate that our custom fields are discovered
 	assert.NotEmpty(t, discoveredFields, "Should discover at least some fields")
 
-	// Check for our specific custom fields
 	fieldMap := make(map[string]bool)
 	for _, field := range discoveredFields {
 		fieldMap[field] = true
 	}
 
-	// Our custom fields should be discovered
 	assert.True(t, fieldMap["custom_field_one"], "Should discover 'custom_field_one' field")
 	assert.True(t, fieldMap["custom_field_two"], "Should discover 'custom_field_two' field")
 	assert.True(t, fieldMap["status_code"], "Should discover 'status_code' field")
@@ -192,9 +186,6 @@ func Test_DiscoverFields_WithCustomFieldsInLogs_ReturnsDiscoveredFields(t *testi
 	assert.True(t, fieldMap["priority_level"], "Should discover 'priority_level' field")
 	assert.True(t, fieldMap["unique_field_a"], "Should discover 'unique_field_a' field")
 	assert.True(t, fieldMap["unique_field_b"], "Should discover 'unique_field_b' field")
-
-	// Note: Field discovery appears to only return custom fields, not standard built-in fields like 'message' and 'level'
-	// This is expected behavior since standard fields are always available
 
 	t.Logf("Discovered fields: %v", discoveredFields)
 }
@@ -215,7 +206,6 @@ func Test_ExecuteQueryForProject_WithTimeRange_ReturnsFilteredLogs(t *testing.T)
 	uniqueTestSession := uuid.New().String()[:8]
 	baseTime := time.Now().UTC()
 
-	// Create logs at different times
 	oldTime := baseTime.Add(-2 * time.Hour)
 	recentTime := baseTime.Add(-30 * time.Minute)
 	veryRecentTime := baseTime.Add(-10 * time.Minute)
@@ -231,7 +221,8 @@ func Test_ExecuteQueryForProject_WithTimeRange_ReturnsFilteredLogs(t *testing.T)
 	allLogEntries = MergeLogEntries(allLogEntries, veryRecentLogEntries)
 	StoreTestLogsAndFlush(t, repository, allLogEntries)
 
-	// First, query without time range to confirm we have all 3 logs
+	WaitForLogsToBeQueryable(t, repository, projectID, 3, 30_000)
+
 	allLogsQuery := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
 			Type: logs_core.QueryNodeTypeCondition,
@@ -248,7 +239,6 @@ func Test_ExecuteQueryForProject_WithTimeRange_ReturnsFilteredLogs(t *testing.T)
 	assert.NoError(t, allLogsErr)
 	assert.Equal(t, int64(3), allLogsResult.Total, "Should have 3 total logs before time filtering")
 
-	// Query with time range filtering out old logs (only logs after -1 hour)
 	timeRangeStart := baseTime.Add(-1 * time.Hour)
 	timeRangeQuery := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
@@ -269,18 +259,15 @@ func Test_ExecuteQueryForProject_WithTimeRange_ReturnsFilteredLogs(t *testing.T)
 	assert.NoError(t, timeRangeErr)
 	assert.NotNil(t, timeRangeResult)
 
-	// Validate that time filtering worked - should only get recent and very recent logs
 	assert.Equal(t, int64(2), timeRangeResult.Total, "Should find only 2 logs after time range filtering")
 	assert.Len(t, timeRangeResult.Logs, 2, "Should return only 2 logs")
 
-	// Validate all returned logs are within the time range
 	for i, log := range timeRangeResult.Logs {
 		assert.True(t, log.Timestamp.After(timeRangeStart) || log.Timestamp.Equal(timeRangeStart),
 			"Log %d timestamp should be after time range start. Log time: %v, Range start: %v",
 			i, log.Timestamp, timeRangeStart)
 	}
 
-	// Validate we got the expected logs (not the old one)
 	messages := make([]string, len(timeRangeResult.Logs))
 	for i, log := range timeRangeResult.Logs {
 		messages[i] = log.Message
@@ -289,8 +276,7 @@ func Test_ExecuteQueryForProject_WithTimeRange_ReturnsFilteredLogs(t *testing.T)
 	assert.Contains(t, messages, "Very recent log entry")
 	assert.NotContains(t, messages, "Old log entry", "Old log should be filtered out by time range")
 
-	// Test with both From and To time range
-	timeRangeEnd := baseTime.Add(-20 * time.Minute) // Should exclude the very recent log
+	timeRangeEnd := baseTime.Add(-20 * time.Minute)
 	boundedTimeQuery := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
 			Type: logs_core.QueryNodeTypeCondition,
@@ -320,7 +306,6 @@ func Test_ExecuteQueryForProject_FieldsSortedAscending_IncludingClientIp(t *test
 	uniqueTestSession := uuid.New().String()[:8]
 	currentTime := time.Now().UTC()
 
-	// Create a log with multiple custom fields and clientIp to test field sorting
 	testLogEntries := CreateTestLogEntriesWithUniqueFields(projectID, currentTime,
 		"Field sorting test log", map[string]any{
 			"zebra_field":  "last_alphabetically",
@@ -330,7 +315,6 @@ func Test_ExecuteQueryForProject_FieldsSortedAscending_IncludingClientIp(t *test
 			"test_session": uniqueTestSession,
 		})
 
-	// Set a specific client IP for testing
 	for _, entries := range testLogEntries {
 		for _, entry := range entries {
 			entry.ClientIP = "192.168.1.100"
@@ -338,6 +322,8 @@ func Test_ExecuteQueryForProject_FieldsSortedAscending_IncludingClientIp(t *test
 	}
 
 	StoreTestLogsAndFlush(t, repository, testLogEntries)
+
+	WaitForLogsToBeQueryable(t, repository, projectID, 1, 30_000)
 
 	query := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
@@ -360,30 +346,23 @@ func Test_ExecuteQueryForProject_FieldsSortedAscending_IncludingClientIp(t *test
 	log := result.Logs[0]
 	assert.NotNil(t, log.Fields, "Log should have Fields map")
 
-	// Verify clientIp is included in Fields map
 	assert.Contains(t, log.Fields, "client_ip", "Fields should include client_ip")
 	assert.Equal(t, "192.168.1.100", log.Fields["client_ip"], "client_ip in Fields should match")
 
-	// Verify clientIp is also available as separate field (not removed from DTO)
 	assert.Equal(t, "192.168.1.100", log.ClientIP, "ClientIP field should still be available")
 
-	// Extract field names from the Fields map
 	var fieldNames []string
 	for fieldName := range log.Fields {
 		fieldNames = append(fieldNames, fieldName)
 	}
 
-	// Verify we have all expected fields including clientIp
 	expectedFields := []string{"alpha_field", "beta_field", "client_ip", "middle_field", "test_session", "zebra_field"}
 	assert.Len(t, fieldNames, len(expectedFields), "Should have expected number of fields")
 
-	// Sort the extracted field names for comparison (Go maps have randomized iteration order)
 	slices.Sort(fieldNames)
 
-	// Verify all expected fields are present and the sorted result matches expected sorted order
 	assert.Equal(t, expectedFields, fieldNames, "Fields should be present and when sorted match expected order")
 
-	// Verify individual field values are correct
 	assert.Equal(t, "first_alphabetically", log.Fields["alpha_field"])
 	assert.Equal(t, "second_alphabetically", log.Fields["beta_field"])
 	assert.Equal(t, "192.168.1.100", log.Fields["client_ip"])
@@ -400,53 +379,41 @@ func Test_StoreLogsBatch_WithMixedFieldTypes_ConvertsAllToStrings(t *testing.T) 
 	uniqueTestSession := uuid.New().String()[:8]
 	currentTime := time.Now().UTC()
 
-	// Create unique field name to avoid conflicts with existing mappings
 	testFieldName := "mixed_field_" + uniqueTestSession
 
-	// First, store a log with an integer value
 	integerFieldEntries := CreateTestLogEntriesWithUniqueFields(projectID, currentTime,
 		"Log with integer field", map[string]any{
-			testFieldName:  500, // Integer type - will be converted to string "500"
+			testFieldName:  500,
 			"test_session": uniqueTestSession,
 		})
 
 	err := repository.StoreLogsBatch(integerFieldEntries)
 	assert.NoError(t, err, "Should store integer field converted to string")
 
-	// Force flush
-	flushErr := repository.ForceFlush()
-	assert.NoError(t, flushErr, "Force flush should succeed")
+	repository.ForceFlush()
 
-	// Now store a log with a string value in the same field
 	stringFieldEntries := CreateTestLogEntriesWithUniqueFields(projectID, currentTime.Add(1*time.Second),
 		"Log with string field", map[string]any{
-			testFieldName:  "ERR001", // String type - also stored as string
+			testFieldName:  "ERR001",
 			"test_session": uniqueTestSession,
 		})
 
-	// This should succeed because both values are stored as strings
 	err = repository.StoreLogsBatch(stringFieldEntries)
 	assert.NoError(t, err, "Should store string field without conflict since both are strings")
 
-	// Force flush again
-	flushErr2 := repository.ForceFlush()
-	assert.NoError(t, flushErr2, "Second force flush should succeed")
+	repository.ForceFlush()
 
-	// Now store a boolean value in the same field
 	booleanFieldEntries := CreateTestLogEntriesWithUniqueFields(projectID, currentTime.Add(2*time.Second),
 		"Log with boolean field", map[string]any{
-			testFieldName:  true, // Boolean type - will be converted to string "true"
+			testFieldName:  true,
 			"test_session": uniqueTestSession,
 		})
 
 	err = repository.StoreLogsBatch(booleanFieldEntries)
 	assert.NoError(t, err, "Should store boolean field converted to string")
 
-	// Force flush
-	flushErr3 := repository.ForceFlush()
-	assert.NoError(t, flushErr3, "Third force flush should succeed")
+	WaitForLogsToBeQueryable(t, repository, projectID, 3, 30_000)
 
-	// Query all logs to verify they're all stored correctly
 	query := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
 			Type: logs_core.QueryNodeTypeCondition,
@@ -463,13 +430,11 @@ func Test_StoreLogsBatch_WithMixedFieldTypes_ConvertsAllToStrings(t *testing.T) 
 	assert.NoError(t, queryErr, "Query should succeed")
 	assert.Equal(t, int64(3), result.Total, "Should find all 3 logs")
 
-	// Verify all field values are stored as strings
 	foundIntegerAsString := false
 	foundStringValue := false
 	foundBooleanAsString := false
 	for _, log := range result.Logs {
 		if fieldValue, exists := log.Fields[testFieldName]; exists {
-			// All values should be strings
 			stringValue, isString := fieldValue.(string)
 			assert.True(t, isString, "Field value should be stored as string, got %T", fieldValue)
 
@@ -503,6 +468,8 @@ func Test_ExecuteQueryForProject_WithNanosecondTimestamp_PreservesFullPrecision(
 		})
 
 	StoreTestLogsAndFlush(t, repository, testLogEntries)
+
+	WaitForLogsToBeQueryable(t, repository, projectID, 1, 30_000)
 
 	query := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
@@ -578,6 +545,8 @@ func Test_ExecuteQueryForProject_WithMultipleLogsAt2NanosecondSteps_PreservesNan
 	}
 
 	StoreTestLogsAndFlush(t, repository, allEntries)
+
+	WaitForLogsToBeQueryable(t, repository, projectID, 5, 30_000)
 
 	query := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
