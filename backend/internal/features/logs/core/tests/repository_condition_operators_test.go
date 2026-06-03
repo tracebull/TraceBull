@@ -42,8 +42,7 @@ func Test_ExecuteQueryForProject_WithNotEqualsOperator_ReturnsNonMatchingLogs(t 
 
 	allEntries := MergeLogEntries(matchingLogEntries, nonMatchingLogEntries1)
 	allEntries = MergeLogEntries(allEntries, nonMatchingLogEntries2)
-	StoreTestLogsAndFlush(t, repository, allEntries)
-	WaitForLogsToAppear(t, repository, projectID, 3, 10000)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test not_equals on custom field
 	notEqualsQuery := &logs_core.LogQueryRequestDTO{
@@ -118,7 +117,7 @@ func Test_ExecuteQueryForProject_WithNotContainsOperator_ReturnsNonMatchingLogs(
 
 	allEntries := MergeLogEntries(containsLogEntries, notContainsLogEntries1)
 	allEntries = MergeLogEntries(allEntries, notContainsLogEntries2)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test not_contains on system field (message)
 	notContainsQuery := &logs_core.LogQueryRequestDTO{
@@ -189,7 +188,7 @@ func Test_ExecuteQueryForProject_WithContainsOperator_UserAgentField_ReturnsMatc
 		})
 
 	allEntries := MergeLogEntries(userAgentLogEntries, otherLogEntries)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test contains operator on userAgent field (case sensitive)
 	containsQuery := &logs_core.LogQueryRequestDTO{
@@ -263,7 +262,7 @@ func Test_ExecuteQueryForProject_WithInOperator_ReturnsMatchingLogs(t *testing.T
 	allEntries := MergeLogEntries(logEntries1, logEntries2)
 	allEntries = MergeLogEntries(allEntries, logEntries3)
 	allEntries = MergeLogEntries(allEntries, logEntries4)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test IN operator on custom field
 	inQuery := &logs_core.LogQueryRequestDTO{
@@ -322,7 +321,7 @@ func Test_ExecuteQueryForProject_WithInOperator_ReturnsMatchingLogs(t *testing.T
 	}
 
 	levelEntries := MergeLogEntries(errorLogEntries, warnLogEntries)
-	StoreTestLogsAndFlush(t, repository, levelEntries)
+	StoreTestLogsAndWait(t, repository, levelEntries)
 
 	systemInQuery := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
@@ -383,7 +382,7 @@ func Test_ExecuteQueryForProject_WithNotInOperator_ReturnsNonMatchingLogs(t *tes
 	allEntries := MergeLogEntries(logEntries1, logEntries2)
 	allEntries = MergeLogEntries(allEntries, logEntries3)
 	allEntries = MergeLogEntries(allEntries, logEntries4)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test NOT IN operator on custom field
 	notInQuery := &logs_core.LogQueryRequestDTO{
@@ -424,7 +423,7 @@ func Test_ExecuteQueryForProject_WithInOperator_EmptyArray_ReturnsNoLogs(t *test
 			"status":       "active",
 		})
 
-	StoreTestLogsAndFlush(t, repository, logEntries)
+	StoreTestLogsAndWait(t, repository, logEntries)
 
 	// Test IN operator with empty array
 	emptyInQuery := &logs_core.LogQueryRequestDTO{
@@ -465,7 +464,7 @@ func Test_ExecuteQueryForProject_WithInOperator_SingleValue_ReturnsMatchingLogs(
 		})
 
 	allEntries := MergeLogEntries(logEntries1, logEntries2)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test IN operator with single value (should behave like equals)
 	singleInQuery := &logs_core.LogQueryRequestDTO{
@@ -539,7 +538,7 @@ func Test_ExecuteQueryForProject_WithExistsOperator_ReturnsLogsWithField(t *test
 
 	allEntries := MergeLogEntries(logWithOptionalField, logWithDifferentFields)
 	allEntries = MergeLogEntries(allEntries, logMinimalFields)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test EXISTS operator on custom field
 	existsQuery := &logs_core.LogQueryRequestDTO{
@@ -626,7 +625,7 @@ func Test_ExecuteQueryForProject_WithNotExistsOperator_ReturnsLogsWithoutField(t
 
 	allEntries := MergeLogEntries(logWithErrorCode, logWithoutErrorCode1)
 	allEntries = MergeLogEntries(allEntries, logWithoutErrorCode2)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test NOT EXISTS operator on custom field
 	notExistsQuery := &logs_core.LogQueryRequestDTO{
@@ -687,7 +686,7 @@ func Test_ExecuteQueryForProject_WithExistsOperator_SystemField_ReturnsAllLogs(t
 
 	allEntries := MergeLogEntries(log1, log2)
 	allEntries = MergeLogEntries(allEntries, log3)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test EXISTS on system fields that should always exist
 	systemFields := []string{"message", "level", "timestamp"}
@@ -736,7 +735,7 @@ func Test_ExecuteQueryForProject_WithNotExistsOperator_SystemField_ReturnsNoLogs
 			"test_case":    "system_field_not_exists",
 		})
 
-	StoreTestLogsAndFlush(t, repository, testLogs)
+	StoreTestLogsAndWait(t, repository, testLogs)
 
 	// Test NOT EXISTS on system fields - should return no results since all logs have system fields
 	systemFields := []string{"message", "level", "timestamp", "id"}
@@ -789,7 +788,7 @@ func Test_ExecuteQueryForProject_WithGreaterThanOperator_SystemField_ReturnsMatc
 
 	allEntries := MergeLogEntries(oldLog, recentLog)
 	allEntries = MergeLogEntries(allEntries, newestLog)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test greater than operator on timestamp
 	thresholdTime := baseTime.Add(-1 * time.Hour)
@@ -849,7 +848,7 @@ func Test_ExecuteQueryForProject_WithGreaterOrEqualOperator_SystemField_ReturnsM
 
 	allEntries := MergeLogEntries(beforeBoundaryLog, exactBoundaryLog)
 	allEntries = MergeLogEntries(allEntries, afterBoundaryLog)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test greater than or equal operator on timestamp
 	greaterOrEqualQuery := &logs_core.LogQueryRequestDTO{
@@ -918,7 +917,7 @@ func Test_ExecuteQueryForProject_WithLessThanOperator_SystemField_ReturnsMatchin
 
 	allEntries := MergeLogEntries(veryOldLog, oldLog)
 	allEntries = MergeLogEntries(allEntries, recentLog)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test less than operator on timestamp
 	thresholdTime := baseTime.Add(-1 * time.Hour)
@@ -978,7 +977,7 @@ func Test_ExecuteQueryForProject_WithLessOrEqualOperator_SystemField_ReturnsMatc
 
 	allEntries := MergeLogEntries(beforeBoundaryLog, exactBoundaryLog)
 	allEntries = MergeLogEntries(allEntries, afterBoundaryLog)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test less than or equal operator on timestamp
 	lessOrEqualQuery := &logs_core.LogQueryRequestDTO{
@@ -1031,7 +1030,7 @@ func Test_ExecuteQueryForProject_WithRangeOperators_CustomField_ReturnsNoLogs(t 
 			"response_time": 250,
 		})
 
-	StoreTestLogsAndFlush(t, repository, testLogs)
+	StoreTestLogsAndWait(t, repository, testLogs)
 
 	// Test that range operators on custom fields return no results
 	rangeOperators := []logs_core.ConditionOperator{
@@ -1104,7 +1103,7 @@ func Test_ExecuteQueryForProject_WithSpecialCharactersInValue_ReturnsMatchingLog
 		})
 
 	allEntries := MergeLogEntries(specialCharsLog, normalLog)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test equals operator with special characters
 	testCases := []struct {
@@ -1194,7 +1193,7 @@ func Test_ExecuteQueryForProject_WithUnicodeValue_ReturnsMatchingLogs(t *testing
 		})
 
 	allEntries := MergeLogEntries(unicodeLog, asciiLog)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test equals operator with unicode values
 	unicodeTestCases := []struct {
@@ -1284,7 +1283,7 @@ func Test_ExecuteQueryForProject_WithExactBoundaryTimestamp_ReturnsMatchingLogs(
 
 	allEntries := MergeLogEntries(beforeBoundaryLog, exactBoundaryLog)
 	allEntries = MergeLogEntries(allEntries, afterBoundaryLog)
-	StoreTestLogsAndFlush(t, repository, allEntries)
+	StoreTestLogsAndWait(t, repository, allEntries)
 
 	// Test greater_or_equal with exact boundary
 	gteQuery := &logs_core.LogQueryRequestDTO{

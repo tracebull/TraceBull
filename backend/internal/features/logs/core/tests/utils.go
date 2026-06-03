@@ -100,6 +100,22 @@ func StoreTestLogsAndFlush(
 	assert.NoError(t, flushErr, "Failed to refresh index")
 }
 
+func StoreTestLogsAndWait(
+	t *testing.T,
+	repository logs_core.LogStorage,
+	testLogEntries map[uuid.UUID][]*logs_core.LogItem,
+) {
+	storeErr := repository.StoreLogsBatch(testLogEntries)
+	assert.NoError(t, storeErr, "Failed to store test data")
+
+	flushErr := repository.ForceFlush()
+	assert.NoError(t, flushErr, "Failed to refresh index")
+
+	for projectID, logs := range testLogEntries {
+		WaitForLogsToAppear(t, repository, projectID, int64(len(logs)), 10000)
+	}
+}
+
 func CreateBatchLogEntries(
 	projectID uuid.UUID,
 	logCount int,
