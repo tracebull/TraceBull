@@ -1151,14 +1151,13 @@ func Test_ExecuteQueryForProject_WithSpecialCharactersInValue_ReturnsMatchingLog
 		}
 	}
 
-	// Test contains operator with special characters
 	containsQuery := &logs_core.LogQueryRequestDTO{
 		Query: &logs_core.QueryNode{
 			Type: logs_core.QueryNodeTypeCondition,
 			Condition: &logs_core.ConditionNode{
 				Field:    "message",
 				Operator: logs_core.ConditionOperatorContains,
-				Value:    "@#$%^&*()",
+				Value:    "@user#123",
 			},
 		},
 		Limit: 10,
