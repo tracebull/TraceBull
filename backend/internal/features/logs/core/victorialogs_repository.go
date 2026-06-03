@@ -505,7 +505,7 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 	case ConditionOperatorIn:
 		values := asStringSlice(condition.Value)
 		if len(values) == 0 {
-			return ""
+			return fmt.Sprintf(`%s:="__never_match__"`, logsQLField)
 		}
 		if fieldName == "timestamp" {
 			var parts []string
