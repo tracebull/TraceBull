@@ -34,7 +34,7 @@ export const CreateProjectDialogComponent = ({
   const [projectName, setProjectName] = useState('');
 
   const isAllowedToCreateProjects =
-    globalSettings.isMemberAllowedToCreateProjects || user.role === UserRole.ADMIN;
+    globalSettings.isManagerAllowedToCreateProjects || user.role === UserRole.ADMIN;
 
   const handleCreateProject = async () => {
     if (!projectName.trim()) {

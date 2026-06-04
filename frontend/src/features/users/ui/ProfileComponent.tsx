@@ -17,8 +17,10 @@ const getRoleDisplayText = (role: UserRole): string => {
   switch (role) {
     case UserRole.ADMIN:
       return 'Admin';
-    case UserRole.MEMBER:
-      return 'Member';
+    case UserRole.MANAGER:
+      return 'Manager';
+    case UserRole.USER:
+      return 'User';
     default:
       return role;
   }

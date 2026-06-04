@@ -48,8 +48,10 @@ const getRoleColor = (role: UserRole): string => {
   switch (role) {
     case UserRole.ADMIN:
       return 'text-blue-500';
-    case UserRole.MEMBER:
+    case UserRole.MANAGER:
       return 'text-primary';
+    case UserRole.USER:
+      return 'text-muted-foreground';
     default:
       return 'text-muted-foreground';
   }
@@ -240,7 +242,7 @@ export function UsersComponent({ globalSettings, user }: Props) {
           <div className="mb-4 flex items-center justify-end">
             <div className="flex items-center gap-3">
               {(user?.role === UserRole.ADMIN ||
-                globalSettings?.isAllowMemberInvitations !== false) && (
+                globalSettings?.isAllowManagerInvitations !== false) && (
                 <Button onClick={() => setIsBulkInviteOpen(true)}>Bulk Invite</Button>
               )}
               <div className="text-muted-foreground text-sm">
@@ -295,8 +297,11 @@ export function UsersComponent({ globalSettings, user }: Props) {
                             <SelectItem value={UserRole.ADMIN}>
                               <span className={getRoleColor(UserRole.ADMIN)}>Admin</span>
                             </SelectItem>
-                            <SelectItem value={UserRole.MEMBER}>
-                              <span className={getRoleColor(UserRole.MEMBER)}>Member</span>
+                            <SelectItem value={UserRole.MANAGER}>
+                              <span className={getRoleColor(UserRole.MANAGER)}>Manager</span>
+                            </SelectItem>
+                            <SelectItem value={UserRole.USER}>
+                              <span className={getRoleColor(UserRole.USER)}>User</span>
                             </SelectItem>
                           </SelectContent>
                         </Select>

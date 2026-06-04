@@ -270,7 +270,8 @@ export const MainScreenComponent = () => {
       return (
         <div className="flex h-full items-center justify-center">
           {(user?.role === UserRole.ADMIN ||
-            globalSettings?.isMemberAllowedToCreateProjects !== false) && (
+            (user?.role === UserRole.MANAGER &&
+              globalSettings?.isManagerAllowedToCreateProjects !== false)) && (
             <Button
               size="lg"
               onClick={handleCreateProject}

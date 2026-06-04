@@ -30,8 +30,8 @@ export function SettingsComponent() {
   // Form state to track changes
   const [formSettings, setFormSettings] = useState<UsersSettings>({
     isAllowExternalRegistrations: false,
-    isAllowMemberInvitations: false,
-    isMemberAllowedToCreateProjects: false,
+    isAllowManagerInvitations: false,
+    isManagerAllowedToCreateProjects: false,
   });
 
   useEffect(() => {
@@ -145,23 +145,23 @@ export function SettingsComponent() {
                     </div>
                   </div>
 
-                  {/* Member Invitations Setting */}
+                  {/* Manager Invitations Setting */}
                   {!formSettings.isAllowExternalRegistrations && (
                     <div className="border-border flex items-start justify-between border-b pb-4">
                       <div className="flex-1 pr-20">
-                        <div className="text-foreground font-medium">Allow member invitations</div>
+                        <div className="text-foreground font-medium">Allow manager invitations</div>
 
                         <div className="text-muted-foreground mt-1">
-                          When enabled, existing members can invite new users to join TraceBull. If
+                          When enabled, existing managers can invite new users to join TraceBull. If
                           not - only admins can invite users.
                         </div>
                       </div>
 
                       <div className="ml-4">
                         <Switch
-                          checked={formSettings.isAllowMemberInvitations}
+                          checked={formSettings.isAllowManagerInvitations}
                           onCheckedChange={(checked) =>
-                            handleSettingChange('isAllowMemberInvitations', checked)
+                            handleSettingChange('isAllowManagerInvitations', checked)
                           }
                           className="data-[state=checked]:bg-primary"
                         />
@@ -169,21 +169,21 @@ export function SettingsComponent() {
                     </div>
                   )}
 
-                  {/* Member Project Creation Setting */}
+                  {/* Manager Project Creation Setting */}
                   <div className="border-border flex items-start justify-between border-b pb-4">
                     <div className="flex-1 pr-20">
-                      <div className="text-foreground font-medium">Members can create projects</div>
+                      <div className="text-foreground font-medium">Managers can create projects</div>
 
                       <div className="text-muted-foreground mt-1">
-                        When enabled, members (non-admin users) can create new projects. If not -
-                        only admins can create projects.
+                        When enabled, managers can create new projects. If not - only admins can
+                        create projects.
                       </div>
                     </div>
                     <div className="ml-4">
                       <Switch
-                        checked={formSettings.isMemberAllowedToCreateProjects}
+                        checked={formSettings.isManagerAllowedToCreateProjects}
                         onCheckedChange={(checked) =>
-                          handleSettingChange('isMemberAllowedToCreateProjects', checked)
+                          handleSettingChange('isManagerAllowedToCreateProjects', checked)
                         }
                         className="data-[state=checked]:bg-primary"
                       />

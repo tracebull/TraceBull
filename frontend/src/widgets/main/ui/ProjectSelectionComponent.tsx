@@ -52,7 +52,9 @@ export const ProjectSelectionComponent = ({
   };
 
   const canCreateProjects =
-    user?.role === UserRole.ADMIN || globalSettings?.isMemberAllowedToCreateProjects !== false;
+    user?.role === UserRole.ADMIN ||
+    (user?.role === UserRole.MANAGER &&
+      globalSettings?.isManagerAllowedToCreateProjects !== false);
 
   // Handle click outside dropdown
   useEffect(() => {

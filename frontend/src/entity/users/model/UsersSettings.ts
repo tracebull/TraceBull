@@ -1,5 +1,5 @@
 export interface UsersSettings {
   isAllowExternalRegistrations: boolean;
-  isAllowMemberInvitations: boolean;
-  isMemberAllowedToCreateProjects: boolean;
+  isAllowManagerInvitations: boolean;
+  isManagerAllowedToCreateProjects: boolean;
 }
