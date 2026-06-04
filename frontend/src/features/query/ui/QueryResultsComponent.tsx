@@ -20,6 +20,17 @@ import { type LogItem } from '../../../entity/query';
 import { getUserTimeFormatWithMs } from '../../../shared/time';
 
 const STORAGE_KEY = 'tracebull-message-length';
+const SERVICE_FIELD_NAMES = [
+  'service',
+  'service_name',
+  'serviceName',
+  'application',
+  'application_name',
+  'app',
+  'app_name',
+  'spring.application.name',
+  'component',
+];
 
 /**
  * Get default message length based on screen width
@@ -157,6 +168,25 @@ export const QueryResultsComponent = ({
         {level}
       </span>
     );
+  };
+
+  const getLogFieldValue = (log: LogItem, fieldName: string): string | undefined => {
+    const value = log.fields?.[fieldName];
+    if (value === null || value === undefined || value === '') {
+      return undefined;
+    }
+    return String(value);
+  };
+
+  const getServiceName = (log: LogItem): string | undefined => {
+    for (const fieldName of SERVICE_FIELD_NAMES) {
+      const value = getLogFieldValue(log, fieldName);
+      if (value) {
+        return value;
+      }
+    }
+
+    return undefined;
   };
 
   const truncateText = (
@@ -379,6 +409,7 @@ export const QueryResultsComponent = ({
             {/* Header Row */}
             <div className="border-border text-foreground flex gap-2 border-b pb-1 text-xs font-medium">
               <div className="w-[150px] shrink-0">Timestamp</div>
+              <div className="w-[140px] shrink-0">Service</div>
               <div className="w-[85px] shrink-0">Level</div>
               <div className={showFields ? 'min-w-0 flex-1' : 'min-w-0 flex-[2]'}>Message</div>
               {showFields && (
@@ -392,6 +423,7 @@ export const QueryResultsComponent = ({
             {/* Results Rows */}
             {queryResults.map((log) => {
               const isExpanded = expandedRows.has(log.id);
+              const serviceName = getServiceName(log);
               const { text: displayMessage, isTruncated: messageIsTruncated } = isExpanded
                 ? { text: log.message, isTruncated: false }
                 : truncateText(log.message, messageLength);
@@ -412,6 +444,14 @@ export const QueryResultsComponent = ({
                     <div className="text-muted-foreground !font-mono text-[10px]">
                       {dayjs(log.timestamp).fromNow()}
                     </div>
+                  </div>
+
+                  <div className="w-[140px] shrink-0 !font-mono text-xs break-all">
+                    {serviceName ? (
+                      <span className="text-foreground">{serviceName}</span>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
                   </div>
 
                   <div className="w-[85px] shrink-0 !font-mono">{renderLogLevel(log.level)}</div>
