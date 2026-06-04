@@ -31,27 +31,38 @@
 
 ## Quick Start
 
-### Option 1 — Docker image (recommended)
-
-Pull the pre-built image from GitHub Container Registry and deploy with `docker compose`:
+### Option 1 — Docker Compose (recommended)
 
 ```bash
-# Download the compose file
-curl -O https://raw.githubusercontent.com/tracebull/tracebull/main/docker-compose.yml
-
-# (Optional) customise port, passwords, OAuth keys
+# Download the compose file and env template
+curl -O https://raw.githubusercontent.com/tracebull/TraceBull/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/tracebull/TraceBull/main/.env.example
 cp .env.example .env
 
-# Start
+# (Optional) edit .env — change POSTGRES_PASSWORD for production
+# vim .env
+
 docker compose up -d
 ```
 
-The `docker-compose.yml` uses `ghcr.io/tracebull/tracebull:latest` by default. To pin a specific version replace `latest` with a tag like `v1.2.0`.
+This pulls `ghcr.io/tracebull/tracebull:latest` and starts TraceBull with PostgreSQL, VictoriaLogs, and Valkey. Data persists in named Docker volumes.
 
-Access the app at **http://localhost:4005**.  
-On first load you'll be prompted to set the admin password.
+To pin a version, set the image tag in `docker-compose.yml` (e.g. `ghcr.io/tracebull/tracebull:v1.0.0`).
 
-### Option 2 — Build from source
+Access the app at **http://localhost:4005**. On first load you'll be prompted to set the admin password.
+
+### Option 2 — All-in-one (single container)
+
+Bundles PostgreSQL, VictoriaLogs, and Valkey inside one container. Useful for quick local testing.
+
+```bash
+git clone https://github.com/tracebull/TraceBull.git
+cd TraceBull
+
+docker compose -f docker-compose.yml.example up -d --build
+```
+
+### Option 3 — Build from source
 
 ```bash
 git clone https://github.com/tracebull/TraceBull.git
@@ -118,9 +129,10 @@ X-API-Key: <your-api-key>          # only if the project requires it
 │       ├── shared/              # Shared utilities and hooks
 │       ├── components/ui/       # shadcn/ui components
 │       └── pages/               # Route-level pages
-├── Dockerfile                   # App-only multi-stage build
-├── Dockerfile.all-in-one        # Bundles PostgreSQL + VictoriaLogs + Valkey
-└── docker-compose.yml           # Production compose (external services)
+├── Dockerfile                   # App-only multi-stage build (published to ghcr.io)
+├── Dockerfile.all-in-one        # Bundles PostgreSQL + VictoriaLogs + Valkey (local dev)
+├── docker-compose.yml           # Production: app image + PostgreSQL + VictoriaLogs + Valkey
+└── docker-compose.yml.example   # Local dev: all-in-one container
 ```
 
 ---

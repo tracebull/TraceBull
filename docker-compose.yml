@@ -1,0 +1,75 @@
+services:
+  tracebull:
+    image: ghcr.io/tracebull/tracebull:latest
+    ports:
+      - "${TRACEBULL_PORT:-4005}:4005"
+    environment:
+      ENV_MODE: production
+      DATABASE_DSN: "host=postgres user=${POSTGRES_USER:-postgres} password=${POSTGRES_PASSWORD:-tracebull} dbname=${POSTGRES_DB:-tracebull} port=5432 sslmode=disable"
+      VICTORIALOGS_URL: "http://victorialogs"
+      VICTORIALOGS_PORT: "9428"
+      VALKEY_HOST: "valkey"
+      VALKEY_PORT: "6379"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      victorialogs:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    volumes:
+      - tracebull-data:/tracebull-data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4005/api/v1/system/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-tracebull}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tracebull}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  victorialogs:
+    image: victoriametrics/victoria-logs:latest
+    volumes:
+      - vlogs:/vlogs
+    command: ["-delete.enable"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9428/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  valkey:
+    image: valkey/valkey:8.0-alpine
+    volumes:
+      - valkey-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  pgdata:
+  vlogs:
+  valkey-data:
+  tracebull-data:
