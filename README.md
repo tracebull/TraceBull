@@ -10,7 +10,6 @@
   [![CI](https://github.com/tracebull/TraceBull/actions/workflows/ci-release.yml/badge.svg)](https://github.com/tracebull/TraceBull/actions/workflows/ci-release.yml)
   [![Docker Image](https://ghcr-badge.egpl.dev/tracebull/tracebull/latest_tag?trim=major&label=ghcr.io)](https://github.com/tracebull/TraceBull/pkgs/container/tracebull)
   [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-  [![Self Hosted](https://img.shields.io/badge/self--hosted-yes-brightgreen)](#)
 </div>
 
 ---
@@ -22,8 +21,9 @@
 - **Multi-Project** — Isolated log spaces per project with separate API keys
 - **Multi-User** — Role-based access control (Admin / Member) with project-level permissions
 - **Multi-Language** — Send logs from Python, Go, Java, Node.js and more via HTTP API
-- **Audit Logging** — Complete trail of all user and admin actions
+- **Realtime Streaming** — Live log tail with SSE, no polling
 - **API Keys & Security** — Per-project keys with optional domain and IP restrictions
+- **Audit Logging** — Complete trail of all user and admin actions
 - **OAuth Support** — GitHub and Google login (optional, cloud mode)
 - **Modern UI** — React 19 + shadcn/ui with light/dark theme, built with Tailwind CSS 4
 
@@ -31,66 +31,53 @@
 
 ## Quick Start
 
-### Option 1 — Build from source (recommended)
-
-```bash
-git clone https://github.com/tracebull/TraceBull.git
-cd TraceBull
-
-cp .env.example .env          # customise if needed
-docker compose up -d --build
-```
-
-This builds TraceBull from source and starts it with PostgreSQL, VictoriaLogs, and Valkey. Data persists in named Docker volumes.
-
-Access the app at **http://localhost:4005**. On first load you'll be prompted to set the admin password.
-
-### Option 2 — Pre-built image (ghcr.io)
-
-For deploying without building, use the pre-built image from GitHub Container Registry:
+### Option 1 — Pre-built image (recommended)
 
 ```bash
 curl -O https://raw.githubusercontent.com/tracebull/TraceBull/main/docs/docker-compose.yml
 curl -O https://raw.githubusercontent.com/tracebull/TraceBull/main/.env.example
 cp .env.example .env
 
-# (Optional) edit .env — change POSTGRES_PASSWORD for production
-# vim .env
-
 docker compose up -d
 ```
 
-This pulls `ghcr.io/tracebull/tracebull:latest`. To pin a version, set the image tag (e.g. `ghcr.io/tracebull/tracebull:v1.0.0`).
+Pulls `ghcr.io/tracebull/tracebull:latest` with PostgreSQL 17, VictoriaLogs, and Valkey 8.0. Data persists in named Docker volumes.
 
-### Option 3 — All-in-one (single container)
+Access the app at **http://localhost:4005**. On first load you'll be prompted to set the admin password.
 
-Bundles PostgreSQL, VictoriaLogs, and Valkey inside one container. Useful for quick local testing.
+To pin a version, edit the image tag in `docker-compose.yml` (e.g. `ghcr.io/tracebull/tracebull:v1.0.0`).
+
+### Option 2 — Build from source
 
 ```bash
 git clone https://github.com/tracebull/TraceBull.git
 cd TraceBull
 
-docker compose -f docker-compose.yml.example up -d --build
+cp .env.example .env
+docker compose up -d --build
 ```
+
+Builds the Docker image locally from source. Same stack — PostgreSQL, VictoriaLogs, Valkey.
 
 ---
 
 ## Sending Logs
 
-Once the app is running, open **Search → How to send logs from code?** for ready-to-copy snippets in multiple languages.
+Open **Search → How to send logs from code?** in the app for ready-to-copy snippets in Python, Go, Java, cURL, and more.
 
-The endpoint is:
-
-```
-POST http://localhost:4005/api/v1/logs/ingest/{projectId}
-Content-Type: application/json
-X-API-Key: <your-api-key>          # only if the project requires it
-
-{
-  "message": "User signed in",
-  "level": "INFO",
-  "fields": { "userId": "abc123", "ip": "1.2.3.4" }
-}
+```bash
+curl -X POST http://localhost:4005/api/v1/logs/ingest/{projectId} \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: <your-api-key>" \
+  -d '{
+    "logs": [
+      {
+        "level": "INFO",
+        "message": "User signed in",
+        "fields": { "userId": "abc123", "ip": "1.2.3.4" }
+      }
+    ]
+  }'
 ```
 
 ---
@@ -108,7 +95,7 @@ X-API-Key: <your-api-key>          # only if the project requires it
 
 ---
 
-## Architecture
+## Project Structure
 
 ```
 ├── backend/
@@ -127,43 +114,34 @@ X-API-Key: <your-api-key>          # only if the project requires it
 │       ├── features/            # Feature components
 │       ├── widgets/             # Composite components
 │       ├── shared/              # Shared utilities and hooks
-│       ├── components/ui/       # shadcn/ui components
-│       └── pages/               # Route-level pages
-├── Dockerfile                   # App-only multi-stage build (published to ghcr.io)
-├── Dockerfile.all-in-one        # Bundles PostgreSQL + VictoriaLogs + Valkey (local dev)
-├── docker-compose.yml           # Build from source: app + PostgreSQL + VictoriaLogs + Valkey
-├── docker-compose.yml.example   # Local dev: all-in-one container
+│       └── components/ui/       # shadcn/ui components
+├── Dockerfile                   # Multi-stage build (published to ghcr.io)
+├── docker-compose.yml           # Build from source
 └── docs/
-    └── docker-compose.yml       # Deploy from ghcr.io image (no build required)
+    └── docker-compose.yml       # Deploy from ghcr.io image
 ```
 
 ---
 
 ## Development
 
-### Backend
-
 ```bash
+# Backend
 cd backend
 make run          # Run server (hot-reload with air)
 make test         # Run tests
 make lint         # golangci-lint
-make swagger      # Regenerate Swagger docs
-```
 
-### Frontend
-
-```bash
+# Frontend
 cd frontend
 npm run dev       # Vite dev server with HMR
 npm run build     # TypeScript check + production build
 npm run lint      # ESLint
-npm run format    # Prettier
 ```
 
 ---
 
-## Environment Variables
+## Configuration
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -186,10 +164,6 @@ npm run format    # Prettier
 ## Credits
 
 TraceBull is built on top of [LogBull](https://github.com/logbull/logbull), created by [Rostislav Dugin](https://github.com/rostislav-dugin).
-
-A huge thank you to Rostislav for building the original foundation — the core architecture, log ingestion pipeline, project management system, and multi-user model that TraceBull is built upon all originate from his work. Without LogBull, TraceBull would not exist.
-
-If you find TraceBull useful, consider giving the [original repo](https://github.com/logbull/logbull) a star too.
 
 ---
 
