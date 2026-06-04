@@ -24,10 +24,9 @@ FROM --platform=$BUILDPLATFORM golang:1.24.0 AS backend-build
 ARG TARGETOS
 ARG TARGETARCH
 
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+RUN GOBIN=/target-tools CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
-    go install github.com/swaggo/swag/cmd/swag@v1.16.4
+RUN go install github.com/swaggo/swag/cmd/swag@v1.16.4
 
 WORKDIR /app
 
@@ -39,7 +38,7 @@ RUN mkdir -p /app/ui/build
 COPY --from=frontend-build /frontend/dist /app/ui/build
 
 COPY backend/ ./
-RUN swag init -d . -g cmd/main.go -o swagger
+RUN /go/bin/swag init -d . -g cmd/main.go -o swagger
 
 ARG TARGETVARIANT
 RUN CGO_ENABLED=0 \
@@ -63,7 +62,7 @@ RUN useradd -m -s /bin/bash tracebull
 
 WORKDIR /app
 
-COPY --from=backend-build /go/bin/goose /usr/local/bin/goose
+COPY --from=backend-build /target-tools/goose /usr/local/bin/goose
 COPY --from=backend-build /app/main .
 COPY backend/go.mod ./go.mod
 COPY backend/migrations ./migrations
