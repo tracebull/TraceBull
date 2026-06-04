@@ -1,8 +1,6 @@
 services:
   tracebull:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/tracebull/tracebull:latest
     ports:
       - "${TRACEBULL_PORT:-4005}:4005"
     environment:

@@ -31,11 +31,26 @@
 
 ## Quick Start
 
-### Option 1 — Docker Compose (recommended)
+### Option 1 — Build from source (recommended)
 
 ```bash
-# Download the compose file and env template
-curl -O https://raw.githubusercontent.com/tracebull/TraceBull/main/docker-compose.yml
+git clone https://github.com/tracebull/TraceBull.git
+cd TraceBull
+
+cp .env.example .env          # customise if needed
+docker compose up -d --build
+```
+
+This builds TraceBull from source and starts it with PostgreSQL, VictoriaLogs, and Valkey. Data persists in named Docker volumes.
+
+Access the app at **http://localhost:4005**. On first load you'll be prompted to set the admin password.
+
+### Option 2 — Pre-built image (ghcr.io)
+
+For deploying without building, use the pre-built image from GitHub Container Registry:
+
+```bash
+curl -O https://raw.githubusercontent.com/tracebull/TraceBull/main/docs/docker-compose.yml
 curl -O https://raw.githubusercontent.com/tracebull/TraceBull/main/.env.example
 cp .env.example .env
 
@@ -45,13 +60,9 @@ cp .env.example .env
 docker compose up -d
 ```
 
-This pulls `ghcr.io/tracebull/tracebull:latest` and starts TraceBull with PostgreSQL, VictoriaLogs, and Valkey. Data persists in named Docker volumes.
+This pulls `ghcr.io/tracebull/tracebull:latest`. To pin a version, set the image tag (e.g. `ghcr.io/tracebull/tracebull:v1.0.0`).
 
-To pin a version, set the image tag in `docker-compose.yml` (e.g. `ghcr.io/tracebull/tracebull:v1.0.0`).
-
-Access the app at **http://localhost:4005**. On first load you'll be prompted to set the admin password.
-
-### Option 2 — All-in-one (single container)
+### Option 3 — All-in-one (single container)
 
 Bundles PostgreSQL, VictoriaLogs, and Valkey inside one container. Useful for quick local testing.
 
@@ -60,17 +71,6 @@ git clone https://github.com/tracebull/TraceBull.git
 cd TraceBull
 
 docker compose -f docker-compose.yml.example up -d --build
-```
-
-### Option 3 — Build from source
-
-```bash
-git clone https://github.com/tracebull/TraceBull.git
-cd TraceBull
-
-cp .env.example .env          # customise if needed
-
-docker compose up -d --build
 ```
 
 ---
@@ -131,8 +131,10 @@ X-API-Key: <your-api-key>          # only if the project requires it
 │       └── pages/               # Route-level pages
 ├── Dockerfile                   # App-only multi-stage build (published to ghcr.io)
 ├── Dockerfile.all-in-one        # Bundles PostgreSQL + VictoriaLogs + Valkey (local dev)
-├── docker-compose.yml           # Production: app image + PostgreSQL + VictoriaLogs + Valkey
-└── docker-compose.yml.example   # Local dev: all-in-one container
+├── docker-compose.yml           # Build from source: app + PostgreSQL + VictoriaLogs + Valkey
+├── docker-compose.yml.example   # Local dev: all-in-one container
+└── docs/
+    └── docker-compose.yml       # Deploy from ghcr.io image (no build required)
 ```
 
 ---
