@@ -53,8 +53,7 @@ export const ProjectSelectionComponent = ({
 
   const canCreateProjects =
     user?.role === UserRole.ADMIN ||
-    (user?.role === UserRole.MANAGER &&
-      globalSettings?.isManagerAllowedToCreateProjects !== false);
+    (user?.role === UserRole.MANAGER && globalSettings?.isManagerAllowedToCreateProjects !== false);
 
   // Handle click outside dropdown
   useEffect(() => {

@@ -172,7 +172,9 @@ export function SettingsComponent() {
                   {/* Manager Project Creation Setting */}
                   <div className="border-border flex items-start justify-between border-b pb-4">
                     <div className="flex-1 pr-20">
-                      <div className="text-foreground font-medium">Managers can create projects</div>
+                      <div className="text-foreground font-medium">
+                        Managers can create projects
+                      </div>
 
                       <div className="text-muted-foreground mt-1">
                         When enabled, managers can create new projects. If not - only admins can
