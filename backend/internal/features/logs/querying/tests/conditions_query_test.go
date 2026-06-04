@@ -20,7 +20,7 @@ import (
 
 func Test_ExecuteQuery_WithSimpleConditionQuery_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Simple Condition Test %s", uniqueID[:8])
@@ -42,7 +42,7 @@ func Test_ExecuteQuery_WithSimpleConditionQuery_ReturnsMatchingLogs(t *testing.T
 
 func Test_ExecuteQuery_WithLogicalANDQuery_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Logical AND Test %s", uniqueID[:8])
@@ -76,7 +76,7 @@ func Test_ExecuteQuery_WithLogicalANDQuery_ReturnsMatchingLogs(t *testing.T) {
 
 func Test_ExecuteQuery_WithLogicalORQuery_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID1 := uuid.New().String()
 	uniqueID2 := uuid.New().String()
@@ -125,7 +125,7 @@ func Test_ExecuteQuery_WithLogicalORQuery_ReturnsMatchingLogs(t *testing.T) {
 
 func Test_ExecuteQuery_WithLogicalNOTQuery_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	excludeID := uuid.New().String()
 	includeID := uuid.New().String()
@@ -161,7 +161,7 @@ func Test_ExecuteQuery_WithLogicalNOTQuery_ReturnsMatchingLogs(t *testing.T) {
 
 func Test_ExecuteQuery_WithNestedLogicalQuery_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID1 := uuid.New().String()
 	uniqueID2 := uuid.New().String()
@@ -257,7 +257,7 @@ func Test_ExecuteQuery_WithNestedLogicalQuery_ReturnsMatchingLogs(t *testing.T) 
 
 func Test_ExecuteQuery_WithComplexNestedQuery_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Complex Nested Test %s", uniqueID[:8])

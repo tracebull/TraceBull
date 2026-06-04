@@ -131,7 +131,7 @@ func Test_ExecuteQuery_MessageOperators_ReturnsMatchingLogs(t *testing.T) {
 
 func Test_ExecuteQuery_ComplexMessageQuery_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Complex Message Query Test %s", uniqueID[:8])
@@ -223,7 +223,7 @@ func Test_ExecuteQuery_ComplexMessageQuery_ReturnsMatchingLogs(t *testing.T) {
 
 func Test_ExecuteQuery_MessageWithSpecialCharacters_HandlesCorrectly(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Special Characters Test %s", uniqueID[:8])
@@ -277,7 +277,7 @@ func Test_ExecuteQuery_MessageWithSpecialCharacters_HandlesCorrectly(t *testing.
 
 func Test_ExecuteQuery_ShortMessages_HandlesCorrectly(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Short Message Test %s", uniqueID[:8])

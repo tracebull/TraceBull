@@ -20,7 +20,7 @@ import (
 
 func Test_ExecuteQuery_FilterByTimestampGreaterThan_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	repository := logs_core.GetLogStorage()
 
 	uniqueID := uuid.New().String()
@@ -76,7 +76,7 @@ func Test_ExecuteQuery_FilterByTimestampGreaterThan_ReturnsMatchingLogs(t *testi
 
 func Test_ExecuteQuery_FilterByTimestampLessThan_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	repository := logs_core.GetLogStorage()
 
 	uniqueID := uuid.New().String()
@@ -139,7 +139,7 @@ func Test_ExecuteQuery_FilterByTimestampLessThan_ReturnsMatchingLogs(t *testing.
 
 func Test_ExecuteQuery_WithTimeRangeFilter_ReturnsLogsInRange(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	repository := logs_core.GetLogStorage()
 
 	uniqueID := uuid.New().String()
@@ -202,7 +202,7 @@ func Test_ExecuteQuery_WithTimeRangeFilter_ReturnsLogsInRange(t *testing.T) {
 
 func Test_ExecuteQuery_WithTimeRangeAndConditions_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	repository := logs_core.GetLogStorage()
 
 	uniqueID := uuid.New().String()

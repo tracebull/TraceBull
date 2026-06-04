@@ -23,7 +23,7 @@ func Test_EnforceProjectQuotas_WhenLogCountIsWithinMaxLogsAmount_NoLogsDeleted(t
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID := uuid.New().String()[:8]
 
 	// Create test project
@@ -121,7 +121,7 @@ func Test_EnforceProjectQuotas_WhenMaxLogsAmountIsZero_NoQuotaEnforcement(t *tes
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID := uuid.New().String()[:8]
 
 	// Create test project

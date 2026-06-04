@@ -25,21 +25,21 @@ func Test_ExecuteQuery_WithDifferentUserRoles_ReturnsLogsBasedOnPermissions(t *t
 	}{
 		{
 			name:           "Project Member",
-			userRole:       users_enums.UserRoleMember,
+			userRole:       users_enums.UserRoleManager,
 			projectRole:    &[]users_enums.ProjectRole{users_enums.ProjectRoleMember}[0],
 			logCount:       5,
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "Project Owner",
-			userRole:       users_enums.UserRoleMember,
+			userRole:       users_enums.UserRoleManager,
 			projectRole:    nil, // Owner is the creator
 			logCount:       3,
 			expectedStatus: http.StatusOK,
 		},
 		{
 			name:           "Project Admin",
-			userRole:       users_enums.UserRoleMember,
+			userRole:       users_enums.UserRoleManager,
 			projectRole:    &[]users_enums.ProjectRole{users_enums.ProjectRoleAdmin}[0],
 			logCount:       4,
 			expectedStatus: http.StatusOK,
@@ -62,7 +62,7 @@ func Test_ExecuteQuery_WithDifferentUserRoles_ReturnsLogsBasedOnPermissions(t *t
 
 			if tc.needsProjectOwner {
 				// Global admin test: create separate project owner
-				owner = users_testing.CreateTestUser(users_enums.UserRoleMember)
+				owner = users_testing.CreateTestUser(users_enums.UserRoleManager)
 				testUser = users_testing.CreateTestUser(tc.userRole)
 			} else if tc.projectRole == nil {
 				// Project owner test: user is both owner and test user
@@ -70,7 +70,7 @@ func Test_ExecuteQuery_WithDifferentUserRoles_ReturnsLogsBasedOnPermissions(t *t
 				testUser = owner
 			} else {
 				// Member/Admin test: create owner and separate test user
-				owner = users_testing.CreateTestUser(users_enums.UserRoleMember)
+				owner = users_testing.CreateTestUser(users_enums.UserRoleManager)
 				testUser = users_testing.CreateTestUser(tc.userRole)
 			}
 
@@ -103,7 +103,7 @@ func Test_ExecuteQuery_WithDifferentUserRoles_ReturnsLogsBasedOnPermissions(t *t
 
 func Test_ExecuteQuery_WhenUserIsNotProjectMember_ReturnsForbidden(t *testing.T) {
 	router, _, project, uniqueID := SetupBasicQueryTest(t, "Non-Member Test")
-	nonMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	nonMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	// Submit logs using helper function
 	SubmitLogsWithCustomFields(t, router, project.ID, uniqueID, 1, map[string]any{
@@ -135,7 +135,7 @@ func Test_ExecuteQuery_WithoutAuthToken_ReturnsUnauthorized(t *testing.T) {
 
 func Test_GetQueryableFields_WhenUserIsNotProjectMember_ReturnsForbidden(t *testing.T) {
 	router, _, project, _ := SetupBasicQueryTest(t, "Non-Member Fields Test")
-	nonMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	nonMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	resp := test_utils.MakeGetRequest(
 		t,

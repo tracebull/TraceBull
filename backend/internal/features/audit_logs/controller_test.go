@@ -21,7 +21,7 @@ import (
 func Test_GetGlobalAuditLogs_WithDifferentUserRoles_EnforcesPermissionsCorrectly(t *testing.T) {
 	users_testing.CleanupPlans()
 	adminUser := users_testing.CreateTestUser(user_enums.UserRoleAdmin)
-	memberUser := users_testing.CreateTestUser(user_enums.UserRoleMember)
+	memberUser := users_testing.CreateTestUser(user_enums.UserRoleManager)
 	router := createAuditLogTestRouter()
 	service := GetAuditLogService()
 	projectID := uuid.New()
@@ -52,8 +52,8 @@ func Test_GetGlobalAuditLogs_WithDifferentUserRoles_EnforcesPermissionsCorrectly
 func Test_GetUserAuditLogs_WithDifferentUserRoles_EnforcesPermissionsCorrectly(t *testing.T) {
 	users_testing.CleanupPlans()
 	adminUser := users_testing.CreateTestUser(user_enums.UserRoleAdmin)
-	user1 := users_testing.CreateTestUser(user_enums.UserRoleMember)
-	user2 := users_testing.CreateTestUser(user_enums.UserRoleMember)
+	user1 := users_testing.CreateTestUser(user_enums.UserRoleManager)
+	user2 := users_testing.CreateTestUser(user_enums.UserRoleManager)
 	router := createAuditLogTestRouter()
 	service := GetAuditLogService()
 	projectID := uuid.New()

@@ -412,7 +412,7 @@ func SetupTestProjectWithLogs(
 	logCount int,
 ) (router *gin.Engine, owner *users_dto.SignInResponseDTO, project *projects_models.Project, uniqueID string) {
 	router = CreateLogQueryTestRouter()
-	owner = users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner = users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID = uuid.New().String()
 	projectName := fmt.Sprintf("%s %s", testName, uniqueID[:8])
 	project, _ = projects_testing.CreateTestProjectWithToken(projectName, owner.Token, router)
@@ -483,7 +483,7 @@ func SetupBasicQueryTest(t *testing.T, testName string) (
 	uniqueID string,
 ) {
 	router = CreateLogQueryTestRouter()
-	owner = users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner = users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID = uuid.New().String()
 	projectName := fmt.Sprintf("%s %s", testName, uniqueID[:8])
 	project, _ = projects_testing.CreateTestProjectWithToken(projectName, owner.Token, router)

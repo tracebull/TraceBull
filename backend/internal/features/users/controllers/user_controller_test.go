@@ -345,7 +345,7 @@ func Test_ChangeUserPassword_WithoutAuth_ReturnsUnauthorized(t *testing.T) {
 
 func Test_ChangeUserPassword_WithInvalidJSON_ReturnsBadRequest(t *testing.T) {
 	router := createUserTestRouter()
-	testUser := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	testUser := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	// Test with invalid JSON structure
 	resp := test_utils.MakeRequest(t, router, test_utils.RequestOptions{
@@ -361,7 +361,7 @@ func Test_ChangeUserPassword_WithInvalidJSON_ReturnsBadRequest(t *testing.T) {
 
 func Test_ChangeUserPassword_WithValidationErrors_ReturnsBadRequest(t *testing.T) {
 	router := createUserTestRouter()
-	testUser := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	testUser := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	testCases := []struct {
 		name    string
@@ -436,7 +436,7 @@ func Test_InviteUser_WithoutPermission_ReturnsForbidden(t *testing.T) {
 	router := createUserTestRouter()
 	defer users_testing.ResetSettingsToDefaults()
 
-	memberUser := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	memberUser := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()[:8]
 	request := users_dto.InviteUserRequestDTO{
@@ -449,7 +449,7 @@ func Test_InviteUser_WithoutPermission_ReturnsForbidden(t *testing.T) {
 	settings, err := settingsService.GetSettings()
 	assert.NoError(t, err)
 
-	if settings.IsAllowMemberInvitations {
+	if settings.IsAllowManagerInvitations {
 		t.Fatal("RACE CONDITION DETECTED: Member invitations should be disabled but were enabled by another test")
 	}
 
@@ -542,7 +542,7 @@ func Test_InviteUser_WithDuplicateEmail_ReturnsBadRequest(t *testing.T) {
 
 func Test_UpdateUserInfo_WithValidName_NameUpdated(t *testing.T) {
 	router := createUserTestRouter()
-	testUser := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	testUser := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	newName := "Updated Name"
 	request := users_dto.UpdateUserInfoRequestDTO{
@@ -573,7 +573,7 @@ func Test_UpdateUserInfo_WithValidName_NameUpdated(t *testing.T) {
 
 func Test_UpdateUserInfo_WithValidEmail_EmailUpdated(t *testing.T) {
 	router := createUserTestRouter()
-	testUser := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	testUser := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	newEmail := "newemail" + uuid.New().String() + "@example.com"
 	request := users_dto.UpdateUserInfoRequestDTO{
@@ -604,8 +604,8 @@ func Test_UpdateUserInfo_WithValidEmail_EmailUpdated(t *testing.T) {
 
 func Test_UpdateUserInfo_WithTakenEmail_ReturnsBadRequest(t *testing.T) {
 	router := createUserTestRouter()
-	user1 := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	user2 := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user1 := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	user2 := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	request := users_dto.UpdateUserInfoRequestDTO{
 		Email: &user2.Email,

@@ -119,7 +119,7 @@ func Test_ExecuteQuery_MultipleProjectsComprehensive_AllIsolationMechanismsWork(
 	router, project1, project2, owner1, owner2, uniqueID1, uniqueID2 := setupTwoProjectsWithLogs(t)
 
 	// Create a third project to test more complex isolation scenarios
-	owner3 := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner3 := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID3 := uuid.New().String()
 	project3Name := fmt.Sprintf("Project 3 Isolation Test %s", uniqueID3[:8])
 	project3, _ := projects_testing.CreateTestProjectWithToken(project3Name, owner3.Token, router)
@@ -193,8 +193,8 @@ func setupTwoProjectsWithLogs(t *testing.T) (
 	router = CreateLogQueryTestRouter()
 
 	// Create two separate users and projects
-	owner1 = users_testing.CreateTestUser(users_enums.UserRoleMember)
-	owner2 = users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner1 = users_testing.CreateTestUser(users_enums.UserRoleManager)
+	owner2 = users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID1 = uuid.New().String()
 	uniqueID2 = uuid.New().String()

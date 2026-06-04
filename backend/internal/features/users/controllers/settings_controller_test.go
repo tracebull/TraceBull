@@ -31,8 +31,8 @@ func Test_GetUserSettings_WhenUserIsAdmin_ReturnsSettings(t *testing.T) {
 
 	// Default settings should be true for all
 	assert.True(t, response.IsAllowExternalRegistrations)
-	assert.True(t, response.IsAllowMemberInvitations)
-	assert.True(t, response.IsMemberAllowedToCreateProjects)
+	assert.True(t, response.IsAllowManagerInvitations)
+	assert.True(t, response.IsManagerAllowedToCreateProjects)
 }
 
 func Test_GetUserSettings_WhenUserIsMember_ReturnsSettings(t *testing.T) {
@@ -40,7 +40,7 @@ func Test_GetUserSettings_WhenUserIsMember_ReturnsSettings(t *testing.T) {
 	router := createSettingsTestRouter()
 
 	// Create member user and get token
-	testUser := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	testUser := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	_ = test_utils.MakeGetRequest(
 		t,
@@ -67,9 +67,9 @@ func Test_UpdateUserSettings_WhenUserIsAdmin_SettingsUpdated(t *testing.T) {
 
 	// Update some settings
 	request := users_models.UsersSettings{
-		IsAllowExternalRegistrations:    false,
-		IsAllowMemberInvitations:        true,
-		IsMemberAllowedToCreateProjects: false,
+		IsAllowExternalRegistrations:     false,
+		IsAllowManagerInvitations:        true,
+		IsManagerAllowedToCreateProjects: false,
 	}
 
 	var response users_models.UsersSettings
@@ -85,8 +85,8 @@ func Test_UpdateUserSettings_WhenUserIsAdmin_SettingsUpdated(t *testing.T) {
 
 	// Check that settings were updated
 	assert.False(t, response.IsAllowExternalRegistrations)
-	assert.True(t, response.IsAllowMemberInvitations)
-	assert.False(t, response.IsMemberAllowedToCreateProjects)
+	assert.True(t, response.IsAllowManagerInvitations)
+	assert.False(t, response.IsManagerAllowedToCreateProjects)
 }
 
 func Test_UpdateUserSettings_WithPartialData_SettingsUpdated(t *testing.T) {
@@ -100,8 +100,8 @@ func Test_UpdateUserSettings_WithPartialData_SettingsUpdated(t *testing.T) {
 	request := users_models.UsersSettings{
 		IsAllowExternalRegistrations: false,
 		// Other fields will use default values
-		IsAllowMemberInvitations:        true,
-		IsMemberAllowedToCreateProjects: true,
+		IsAllowManagerInvitations:        true,
+		IsManagerAllowedToCreateProjects: true,
 	}
 
 	var response users_models.UsersSettings
@@ -118,8 +118,8 @@ func Test_UpdateUserSettings_WithPartialData_SettingsUpdated(t *testing.T) {
 	// Check that only the specified setting was updated
 	assert.False(t, response.IsAllowExternalRegistrations)
 	// These should remain true (default values)
-	assert.True(t, response.IsAllowMemberInvitations)
-	assert.True(t, response.IsMemberAllowedToCreateProjects)
+	assert.True(t, response.IsAllowManagerInvitations)
+	assert.True(t, response.IsManagerAllowedToCreateProjects)
 }
 
 func Test_UpdateUserSettings_WhenUserIsMember_ReturnsForbidden(t *testing.T) {
@@ -127,7 +127,7 @@ func Test_UpdateUserSettings_WhenUserIsMember_ReturnsForbidden(t *testing.T) {
 	router := createSettingsTestRouter()
 
 	// Create member user and get token
-	testUser := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	testUser := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	request := users_models.UsersSettings{
 		IsAllowExternalRegistrations: false,

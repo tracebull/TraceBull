@@ -24,7 +24,7 @@ func Test_EnforceLogRetention_WhenMaxLogsLifeDaysIsZero_NoRetentionEnforcement(t
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID := uuid.New().String()[:8]
 
 	// Create test project
@@ -93,7 +93,7 @@ func Test_EnforceLogRetention_WhenMaxLogsLifeDaysIsNegative_NoRetentionEnforceme
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID := uuid.New().String()[:8]
 
 	// Create test project

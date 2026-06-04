@@ -20,7 +20,7 @@ import (
 
 func Test_ExecuteQuery_FilterByClientIPEquals_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("IP Filter Test %s", uniqueID[:8])
@@ -56,7 +56,7 @@ func Test_ExecuteQuery_FilterByClientIPEquals_ReturnsMatchingLogs(t *testing.T) 
 
 func Test_ExecuteQuery_FilterByClientIPContains_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("IP Contains Test %s", uniqueID[:8])

@@ -18,7 +18,7 @@ import (
 func Test_SubmitLogs_WithValidData_LogsAccepted(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := CreateLogsTestRouter()
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Valid Data Test %s", uniqueID[:8])
 	project := projects_testing.CreateTestProject(projectName, user, router)
@@ -47,7 +47,7 @@ func Test_SubmitLogs_WithValidData_LogsAccepted(t *testing.T) {
 func Test_SubmitLogs_WithMultipleLogs_AllLogsAccepted(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := CreateLogsTestRouter()
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Multiple Logs Test %s", uniqueID[:8])
 	project := projects_testing.CreateTestProject(projectName, user, router)
@@ -77,7 +77,7 @@ func Test_SubmitLogs_WithMultipleLogs_AllLogsAccepted(t *testing.T) {
 func Test_SubmitLogs_WithEmptyBatch_ReturnsBadRequest(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := CreateLogsTestRouter()
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Empty Batch Test %s", uniqueID[:8])
 	project := projects_testing.CreateTestProject(projectName, user, router)

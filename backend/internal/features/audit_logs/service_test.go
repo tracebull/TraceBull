@@ -15,8 +15,8 @@ import (
 
 func Test_AuditLogs_ProjectSpecificLogs(t *testing.T) {
 	service := GetAuditLogService()
-	user1 := users_testing.CreateTestUser(user_enums.UserRoleMember)
-	user2 := users_testing.CreateTestUser(user_enums.UserRoleMember)
+	user1 := users_testing.CreateTestUser(user_enums.UserRoleManager)
+	user2 := users_testing.CreateTestUser(user_enums.UserRoleManager)
 	project1ID, project2ID := uuid.New(), uuid.New()
 
 	createAuditLog(service, "Test project1 log first", &user1.UserID, &project1ID)

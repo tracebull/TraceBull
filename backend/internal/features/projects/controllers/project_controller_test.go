@@ -30,7 +30,7 @@ func Test_CreateProjectViaMember_WhenMemberProjectsEnabled_ProjectCreated(t *tes
 	users_testing.EnableMemberProjectCreation()
 	defer users_testing.ResetSettingsToDefaults()
 
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	request := projects_dto.CreateProjectRequestDTO{
 		Name: "Test Project",
@@ -57,7 +57,7 @@ func Test_CreateProjectViaMember_WhenMemberProjectsDisabled_ReturnsForbidden(t *
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	defer users_testing.ResetSettingsToDefaults()
 
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()[:8]
 	request := projects_dto.CreateProjectRequestDTO{
@@ -70,7 +70,7 @@ func Test_CreateProjectViaMember_WhenMemberProjectsDisabled_ReturnsForbidden(t *
 	settings, err := settingsService.GetSettings()
 	assert.NoError(t, err)
 
-	if settings.IsMemberAllowedToCreateProjects {
+	if settings.IsManagerAllowedToCreateProjects {
 		t.Fatal("RACE CONDITION DETECTED: Member project creation should be disabled but was enabled by another test")
 	}
 
@@ -142,7 +142,7 @@ func Test_CreateProject_WithoutAuthToken_ReturnsUnauthorized(t *testing.T) {
 func Test_GetUserProjects_WhenUserHasProjects_ReturnsProjectsList(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project1, _ := projects_testing.CreateTestProjectWithToken("Project 1", user.Token, router)
 	project2, _ := projects_testing.CreateTestProjectWithToken("Project 2", user.Token, router)
@@ -176,7 +176,7 @@ func Test_GetUserProjects_WithoutAuthToken_ReturnsUnauthorized(t *testing.T) {
 func Test_GetSingleProject_WhenUserIsProjectMember_ReturnsProject(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", user.Token, router)
 
@@ -197,8 +197,8 @@ func Test_GetSingleProject_WhenUserIsProjectMember_ReturnsProject(t *testing.T) 
 func Test_GetSingleProject_WhenUserIsNotProjectMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	nonMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	nonMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
 
@@ -216,7 +216,7 @@ func Test_GetSingleProject_WhenUserIsGlobalAdmin_ReturnsProject(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	globalAdmin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
 
@@ -236,7 +236,7 @@ func Test_GetSingleProject_WhenUserIsGlobalAdmin_ReturnsProject(t *testing.T) {
 func Test_GetSingleProject_WithInvalidProjectID_ReturnsBadRequest(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	resp := test_utils.MakeGetRequest(
 		t,
@@ -251,7 +251,7 @@ func Test_GetSingleProject_WithInvalidProjectID_ReturnsBadRequest(t *testing.T) 
 func Test_UpdateProject_WhenUserIsProjectOwner_ProjectUpdated(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Original Name", user.Token, router)
 
@@ -291,8 +291,8 @@ func Test_UpdateProject_WhenUserIsProjectOwner_ProjectUpdated(t *testing.T) {
 func Test_UpdateProject_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
 	projects_testing.AddMemberToProject(project, member, users_enums.ProjectRoleMember, owner.Token, router)
@@ -315,7 +315,7 @@ func Test_UpdateProject_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 func Test_DeleteProject_WhenUserIsProjectOwner_ProjectDeleted(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", user.Token, router)
 
@@ -333,7 +333,7 @@ func Test_DeleteProject_WhenUserIsGlobalAdmin_ProjectDeleted(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	globalAdmin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
 
@@ -350,8 +350,8 @@ func Test_DeleteProject_WhenUserIsGlobalAdmin_ProjectDeleted(t *testing.T) {
 func Test_DeleteProject_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
 	projects_testing.AddMemberToProject(project, member, users_enums.ProjectRoleMember, owner.Token, router)
@@ -369,8 +369,8 @@ func Test_DeleteProject_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 func Test_UpdateProject_WhenUserIsProjectAdmin_ProjectUpdated(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
 	projects_testing.AddMemberToProject(project, projectAdmin, users_enums.ProjectRoleAdmin, owner.Token, router)
@@ -400,8 +400,8 @@ func Test_UpdateProject_WhenUserIsProjectAdmin_ProjectUpdated(t *testing.T) {
 func Test_GetSingleProject_WhenUserIsProjectAdmin_ReturnsProject(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
 	projects_testing.AddMemberToProject(project, projectAdmin, users_enums.ProjectRoleAdmin, owner.Token, router)
@@ -423,8 +423,8 @@ func Test_GetSingleProject_WhenUserIsProjectAdmin_ReturnsProject(t *testing.T) {
 func Test_GetProjectAuditLogs_WhenUserIsProjectAdmin_ReturnsAuditLogs(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New()
 	projectName := fmt.Sprintf("ProjectAdmin Test %s", uniqueID.String()[:8])
@@ -445,8 +445,8 @@ func Test_GetProjectAuditLogs_WhenUserIsProjectAdmin_ReturnsAuditLogs(t *testing
 func Test_GetProjectAuditLogs_WithMultipleProjects_ReturnsOnlyProjectSpecificLogs(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner1 := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	owner2 := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner1 := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	owner2 := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID1 := uuid.New()
 	uniqueID2 := uuid.New()
@@ -521,9 +521,9 @@ func Test_GetProjectAuditLogs_WithDifferentUserRoles_EnforcesPermissionsCorrectl
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	globalAdmin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	nonMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	nonMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New()
 	projectName := fmt.Sprintf("Audit Test Project %s", uniqueID.String()[:8])
@@ -560,7 +560,7 @@ func Test_GetProjectAuditLogs_WithDifferentUserRoles_EnforcesPermissionsCorrectl
 func Test_GetProjectAuditLogs_WithoutAuthToken_ReturnsUnauthorized(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
 
@@ -572,7 +572,7 @@ func Test_GetProjectAuditLogs_WithoutAuthToken_ReturnsUnauthorized(t *testing.T)
 func Test_GetProjectWithCache_WhenProjectExists_ReturnsCachedProject(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectWithToken("Cache Test Project", owner.Token, router)
 	projectService := projects_services.GetProjectService()
 
@@ -608,7 +608,7 @@ func Test_CreateProject_PrewarmsCacheAutomatically(t *testing.T) {
 	users_testing.EnableMemberProjectCreation()
 	defer users_testing.ResetSettingsToDefaults()
 
-	ownerResponse := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	ownerResponse := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	owner := getUserFromSignInResponse(ownerResponse)
 	projectService := projects_services.GetProjectService()
 
@@ -630,7 +630,7 @@ func Test_CreateProject_PrewarmsCacheAutomatically(t *testing.T) {
 func Test_UpdateProject_InvalidatesCache(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	ownerResponse := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	ownerResponse := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	owner := getUserFromSignInResponse(ownerResponse)
 	project, _ := projects_testing.CreateTestProjectWithToken("Cache Invalidation Test", ownerResponse.Token, router)
 	projectService := projects_services.GetProjectService()
@@ -669,7 +669,7 @@ func Test_UpdateProject_InvalidatesCache(t *testing.T) {
 func Test_DeleteProject_InvalidatesCache(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	ownerResponse := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	ownerResponse := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	owner := getUserFromSignInResponse(ownerResponse)
 	project, _ := projects_testing.CreateTestProjectWithToken("Delete Cache Test", ownerResponse.Token, router)
 	projectService := projects_services.GetProjectService()
@@ -688,7 +688,7 @@ func Test_DeleteProject_InvalidatesCache(t *testing.T) {
 func Test_GetProjectWithCache_CachesAllProjectFields(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	ownerResponse := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	ownerResponse := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	owner := getUserFromSignInResponse(ownerResponse)
 	project, _ := projects_testing.CreateTestProjectWithToken("Full Fields Test", ownerResponse.Token, router)
 	projectService := projects_services.GetProjectService()
@@ -765,7 +765,7 @@ func Test_CreateProject_WhenUserHasPlan_ProjectReceiveUserPlan(t *testing.T) {
 	planRequest := users_testing.CreateValidPlanRequest("Pro Plan", users_enums.UserPlanTypePro)
 	plan := users_testing.CreateTestPlanViaAPI(t, planRequest, admin.Token, router)
 
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(user.UserID.String(), plan.ID.String())
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", user.Token, router)
@@ -818,7 +818,7 @@ func Test_CreateProject_WhenUserExceededAllowedPlanProjectsCount_ProjectReceiveD
 	proPlanRequest.MaxLogSizeKB = 512
 	proPlan := users_testing.CreateTestPlanViaAPI(t, proPlanRequest, admin.Token, router)
 
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(user.UserID.String(), proPlan.ID.String())
 
 	project1, _ := projects_testing.CreateTestProjectWithToken("Project 1", user.Token, router)
@@ -877,7 +877,7 @@ func Test_CreateProject_WhenThereAreNoPlans_ProjectCreatedWithoutPlan(t *testing
 	users_testing.CleanupPlans()
 	storage.GetDb().Exec("DELETE FROM user_plans")
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	defer users_testing.ResetSettingsToDefaults()
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", user.Token, router)
@@ -912,10 +912,10 @@ func Test_TransferProjectWithDefaultPlan_FromUserWithDefaultPlanToUserWithDefaul
 	defaultPlanRequest := users_testing.CreateValidPlanRequest("Default Plan", users_enums.UserPlanTypeDefault)
 	defaultPlan := users_testing.CreateTestPlanViaAPI(t, defaultPlanRequest, admin.Token, router)
 
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(owner.UserID.String(), defaultPlan.ID.String())
 
-	newOwner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	newOwner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(newOwner.UserID.String(), defaultPlan.ID.String())
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
@@ -981,10 +981,10 @@ func Test_TransferProjectWithExtendedPlan_FromUserWithExtendedPlanToUserWithDefa
 	extendedPlanRequest := users_testing.CreateValidPlanRequest("Extended Plan", users_enums.UserPlanTypePro)
 	extendedPlan := users_testing.CreateTestPlanViaAPI(t, extendedPlanRequest, admin.Token, router)
 
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(owner.UserID.String(), extendedPlan.ID.String())
 
-	newOwner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	newOwner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(newOwner.UserID.String(), defaultPlan.ID.String())
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
@@ -1036,10 +1036,10 @@ func Test_TransferProjectWithExtendedPlan_FromUserWithExtendedPlanToUserWithExte
 	extendedPlanRequest := users_testing.CreateValidPlanRequest("Extended Plan", users_enums.UserPlanTypePro)
 	extendedPlan := users_testing.CreateTestPlanViaAPI(t, extendedPlanRequest, admin.Token, router)
 
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(owner.UserID.String(), extendedPlan.ID.String())
 
-	newOwner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	newOwner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(newOwner.UserID.String(), extendedPlan.ID.String())
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
@@ -1107,7 +1107,7 @@ func Test_UpdateProjectLimits_WhenProjectHasPlanWithFixedLimits_LimitsNotUpdated
 	planRequest.MaxLogSizeKB = 256
 	plan := users_testing.CreateTestPlanViaAPI(t, planRequest, admin.Token, router)
 
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(owner.UserID.String(), plan.ID.String())
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
@@ -1165,7 +1165,7 @@ func Test_UpdateProjectLimits_WhenProjectWithoutPlan_LimitsUpdated(t *testing.T)
 	)
 	defer users_testing.ResetSettingsToDefaults()
 
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)
 
 	var projectBefore projects_models.Project
@@ -1228,7 +1228,7 @@ func Test_UpdateProjectLimits_WhenProjectHasPlanWithUnlimitedLimits_LimitsUpdate
 	planRequest.MaxLogSizeKB = 128
 	plan := users_testing.CreateTestPlanViaAPI(t, planRequest, admin.Token, router)
 
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(owner.UserID.String(), plan.ID.String())
 
 	project, _ := projects_testing.CreateTestProjectWithToken("Test Project", owner.Token, router)

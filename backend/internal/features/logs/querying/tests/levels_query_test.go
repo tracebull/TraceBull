@@ -20,7 +20,7 @@ import (
 
 func Test_ExecuteQuery_FilterByLevelEquals_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Level Equals Test %s", uniqueID[:8])
@@ -90,7 +90,7 @@ func Test_ExecuteQuery_FilterByLevelEquals_ReturnsMatchingLogs(t *testing.T) {
 
 func Test_ExecuteQuery_FilterByLevelIn_ReturnsMatchingLogs(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Level In Test %s", uniqueID[:8])
@@ -191,7 +191,7 @@ func Test_ExecuteQuery_FilterByLevelIn_ReturnsMatchingLogs(t *testing.T) {
 
 func Test_SubmitAndQuery_WithDifferentLogLevels_LogLevelsFilterable(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Level Filtering E2E %s", uniqueID[:8])

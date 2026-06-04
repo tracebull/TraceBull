@@ -22,7 +22,7 @@ func Test_ProjectLifecycleE2E_CompletesSuccessfully(t *testing.T) {
 	defer users_testing.ResetSettingsToDefaults()
 
 	// 1. Create project owner
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	// 2. Owner creates project
 	createRequest := projects_dto.CreateProjectRequestDTO{
@@ -64,7 +64,7 @@ func Test_ProjectLifecycleE2E_CompletesSuccessfully(t *testing.T) {
 	assert.True(t, inviteResponse.Status == projects_dto.AddStatusInvited)
 
 	// 4. Add existing user to project
-	existingMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	existingMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	addMemberRequest := projects_dto.AddMemberRequestDTO{
 		Email: existingMember.Email,
 		Role:  users_enums.ProjectRoleMember,
@@ -193,7 +193,7 @@ func Test_AdminProjectManagementE2E_CompletesSuccessfully(t *testing.T) {
 
 	// 1. Create admin and regular user
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	regularUser := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	regularUser := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	// 2. Regular user creates project (with member creation disabled)
 	users_testing.DisableMemberProjectCreation()
@@ -233,7 +233,7 @@ func Test_AdminProjectManagementE2E_CompletesSuccessfully(t *testing.T) {
 	adminProjectID := adminProjectResponse.ID
 
 	// 4. Admin can view any project (even not a member)
-	regularUser2 := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	regularUser2 := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.EnableMemberProjectCreation()
 
 	regularUserCreateRequest := projects_dto.CreateProjectRequestDTO{

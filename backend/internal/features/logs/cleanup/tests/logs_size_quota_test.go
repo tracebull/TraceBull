@@ -26,7 +26,7 @@ func Test_EnforceProjectQuotas_WhenStorageSizeIsWithinMaxLogsSizeMB_NoLogsDelete
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID := uuid.New().String()[:8]
 
 	// Create test project
@@ -133,7 +133,7 @@ func Test_EnforceProjectQuotas_WhenMaxLogsSizeMBIsZero_NoSizeQuotaEnforcement(t 
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID := uuid.New().String()[:8]
 
 	// Create test project

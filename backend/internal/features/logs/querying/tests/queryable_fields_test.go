@@ -20,7 +20,7 @@ import (
 
 func Test_GetQueryableFields_WhenUserIsProjectMember_ReturnsFields(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Member Fields Test %s", uniqueID[:8])
@@ -48,7 +48,7 @@ func Test_GetQueryableFields_WhenUserIsProjectMember_ReturnsFields(t *testing.T)
 
 func Test_GetQueryableFields_WithoutSearchQuery_ReturnsAllFields(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("All Fields Test %s", uniqueID[:8])
@@ -81,7 +81,7 @@ func Test_GetQueryableFields_WithoutSearchQuery_ReturnsAllFields(t *testing.T) {
 
 func Test_GetQueryableFields_WithSearchQuery_ReturnsFilteredFields(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Filtered Fields Test %s", uniqueID[:8])
@@ -128,7 +128,7 @@ func Test_GetQueryableFields_WithSearchQuery_ReturnsFilteredFields(t *testing.T)
 
 func Test_GetQueryableFields_WithProjectHavingCustomFields_ReturnsCustomFields(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Custom Fields Test %s", uniqueID[:8])
@@ -217,7 +217,7 @@ func Test_GetQueryableFields_WithProjectHavingCustomFields_ReturnsCustomFields(t
 
 func Test_GetQueryableFields_WithEmptyProject_ReturnsStandardFields(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Empty Project Test %s", uniqueID[:8])
@@ -238,7 +238,7 @@ func Test_GetQueryableFields_WithEmptyProject_ReturnsStandardFields(t *testing.T
 
 func Test_GetQueryableFields_WithDifferentProjects_ReturnsProjectSpecificFields(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	// Create first project with specific custom fields
 	uniqueID1 := uuid.New().String()
@@ -314,7 +314,7 @@ func Test_GetQueryableFields_WithDifferentProjects_ReturnsProjectSpecificFields(
 
 func Test_GetQueryableFields_WithInvalidProjectId_ReturnsBadRequest(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	// Test with invalid UUID
 	url := "/api/v1/logs/query/fields/invalid-uuid"
@@ -335,8 +335,8 @@ func Test_GetQueryableFields_WithUnauthorizedUser_ReturnsUnauthorized(t *testing
 
 func Test_GetQueryableFields_WithDifferentUserRoles_EnforcesPermissions(t *testing.T) {
 	router := CreateLogQueryTestRouter()
-	projectOwner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	otherUser := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	projectOwner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	otherUser := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("Permission Test %s", uniqueID[:8])

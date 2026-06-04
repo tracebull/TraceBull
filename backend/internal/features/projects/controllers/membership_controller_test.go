@@ -20,8 +20,8 @@ import (
 func Test_GetProjectMembers_WhenUserIsProjectMember_ReturnsMembers(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleMember, router)
@@ -52,8 +52,8 @@ func Test_GetProjectMembers_WhenUserIsProjectMember_ReturnsMembers(t *testing.T)
 func Test_GetProjectMembers_WhenUserIsNotProjectMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	nonMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	nonMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
@@ -71,7 +71,7 @@ func Test_GetProjectMembers_WhenUserIsGlobalAdmin_ReturnsMembers(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
@@ -91,8 +91,8 @@ func Test_GetProjectMembers_WhenUserIsGlobalAdmin_ReturnsMembers(t *testing.T) {
 func Test_GetProjectMembers_WhenUserIsProjectAdmin_ReturnsMembers(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, projectAdmin, users_enums.ProjectRoleAdmin, router)
@@ -113,7 +113,7 @@ func Test_GetProjectMembers_WhenUserIsProjectAdmin_ReturnsMembers(t *testing.T) 
 func Test_GetProjectMembers_WithInvalidProjectID_ReturnsBadRequest(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	resp := test_utils.MakeGetRequest(
 		t,
@@ -130,8 +130,8 @@ func Test_GetProjectMembers_WithInvalidProjectID_ReturnsBadRequest(t *testing.T)
 func Test_AddMemberToProject_WhenUserIsProjectOwner_MemberAdded(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	newMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	newMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
@@ -158,8 +158,8 @@ func Test_AddMemberToProject_WhenUserIsGlobalAdmin_MemberAdded(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	newMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	newMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
@@ -185,9 +185,9 @@ func Test_AddMemberToProject_WhenUserIsGlobalAdmin_MemberAdded(t *testing.T) {
 func Test_AddMemberToProject_WhenUserIsProjectAdmin_MemberAdded(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	newMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	newMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, projectAdmin, users_enums.ProjectRoleAdmin, router)
@@ -214,9 +214,9 @@ func Test_AddMemberToProject_WhenUserIsProjectAdmin_MemberAdded(t *testing.T) {
 func Test_AddMemberToProject_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	newMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	newMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleMember, router)
@@ -240,8 +240,8 @@ func Test_AddMemberToProject_WhenUserIsProjectMember_ReturnsForbidden(t *testing
 func Test_AddMemberToProject_WhenUserIsAlreadyMember_ReturnsBadRequest(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleMember, router)
@@ -266,7 +266,7 @@ func Test_AddMemberToProject_WhenUserIsAlreadyMember_ReturnsBadRequest(t *testin
 func Test_AddMemberToProject_WithNonExistentUser_ReturnsInvited(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
@@ -292,9 +292,9 @@ func Test_AddMemberToProject_WithNonExistentUser_ReturnsInvited(t *testing.T) {
 func Test_AddMemberToProject_WhenProjectAdminTriesToAddAdmin_ReturnsBadRequest(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	newMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	newMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, projectAdmin, users_enums.ProjectRoleAdmin, router)
@@ -319,9 +319,9 @@ func Test_AddMemberToProject_WhenProjectAdminTriesToAddAdmin_ReturnsBadRequest(t
 func Test_AddMemberToProject_WhenProjectAdminTriesToAddProjectAdmin_ReturnsBadRequest(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	newMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	newMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, projectAdmin, users_enums.ProjectRoleAdmin, router)
@@ -349,7 +349,7 @@ func Test_InviteMemberToProject_WhenUserIsProjectOwner_MemberInvited(t *testing.
 	users_testing.EnableMemberInvitations()
 	defer users_testing.ResetSettingsToDefaults()
 
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	request := projects_dto.AddMemberRequestDTO{
@@ -378,7 +378,7 @@ func Test_InviteMemberToProject_WhenUserIsGlobalAdmin_MemberInvited(t *testing.T
 	defer users_testing.ResetSettingsToDefaults()
 
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	request := projects_dto.AddMemberRequestDTO{
@@ -406,8 +406,8 @@ func Test_InviteMemberToProject_WhenUserIsProjectAdmin_MemberInvited(t *testing.
 	users_testing.EnableMemberInvitations()
 	defer users_testing.ResetSettingsToDefaults()
 
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, projectAdmin, users_enums.ProjectRoleAdmin, router)
 
@@ -433,8 +433,8 @@ func Test_InviteMemberToProject_WhenUserIsProjectAdmin_MemberInvited(t *testing.
 func Test_InviteMemberToProject_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleMember, router)
@@ -460,8 +460,8 @@ func Test_InviteMemberToProject_WhenUserIsProjectMember_ReturnsForbidden(t *test
 func Test_ChangeMemberRole_WhenUserIsProjectOwner_RoleChanged(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleMember, router)
@@ -484,9 +484,9 @@ func Test_ChangeMemberRole_WhenUserIsProjectOwner_RoleChanged(t *testing.T) {
 func Test_ChangeMemberRole_WhenUserIsProjectAdmin_RoleChanged(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, projectAdmin, users_enums.ProjectRoleAdmin, router)
@@ -511,8 +511,8 @@ func Test_ChangeMemberRole_WhenUserIsGlobalAdmin_RoleChanged(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleMember, router)
@@ -535,9 +535,9 @@ func Test_ChangeMemberRole_WhenUserIsGlobalAdmin_RoleChanged(t *testing.T) {
 func Test_ChangeMemberRole_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member1 := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member2 := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member1 := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member2 := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member1, users_enums.ProjectRoleMember, router)
@@ -561,7 +561,7 @@ func Test_ChangeMemberRole_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T
 func Test_ChangeMemberRole_WhenChangingOwnRole_ReturnsBadRequest(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	request := projects_dto.ChangeMemberRoleRequestDTO{
@@ -583,7 +583,7 @@ func Test_ChangeMemberRole_WhenChangingOwnerRole_ReturnsBadRequest(t *testing.T)
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
@@ -607,8 +607,8 @@ func Test_ChangeMemberRole_WhenChangingOwnerRole_ReturnsBadRequest(t *testing.T)
 func Test_RemoveMemberFromProject_WhenUserIsProjectOwner_MemberRemoved(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleMember, router)
@@ -631,8 +631,8 @@ func Test_RemoveMemberFromProject_WhenUserIsGlobalAdmin_MemberRemoved(t *testing
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleMember, router)
@@ -654,9 +654,9 @@ func Test_RemoveMemberFromProject_WhenUserIsGlobalAdmin_MemberRemoved(t *testing
 func Test_RemoveMemberFromProject_WhenUserIsProjectAdmin_MemberRemoved(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, projectAdmin, users_enums.ProjectRoleAdmin, router)
@@ -679,9 +679,9 @@ func Test_RemoveMemberFromProject_WhenUserIsProjectAdmin_MemberRemoved(t *testin
 func Test_RemoveMemberFromProject_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member1 := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member2 := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member1 := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member2 := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member1, users_enums.ProjectRoleMember, router)
@@ -705,7 +705,7 @@ func Test_RemoveMemberFromProject_WhenRemovingOwner_ReturnsBadRequest(t *testing
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
@@ -728,8 +728,8 @@ func Test_RemoveMemberFromProject_WhenRemovingOwner_ReturnsBadRequest(t *testing
 func Test_TransferProjectOwnership_WhenUserIsProjectOwner_OwnershipTransferred(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleAdmin, router)
@@ -753,8 +753,8 @@ func Test_TransferProjectOwnership_WhenUserIsGlobalAdmin_OwnershipTransferred(t 
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleAdmin, router)
@@ -809,9 +809,9 @@ func Test_TransferProjectOwnership_WhenUserIsGlobalAdmin_OwnershipTransferred(t 
 func Test_TransferProjectOwnership_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member1 := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member2 := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member1 := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member2 := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member1, users_enums.ProjectRoleMember, router)
@@ -835,9 +835,9 @@ func Test_TransferProjectOwnership_WhenUserIsProjectMember_ReturnsForbidden(t *t
 func Test_TransferProjectOwnership_WhenUserIsProjectAdmin_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	projectAdmin := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, projectAdmin, users_enums.ProjectRoleAdmin, router)
@@ -861,8 +861,8 @@ func Test_TransferProjectOwnership_WhenUserIsProjectAdmin_ReturnsForbidden(t *te
 func Test_TransferProjectOwnership_WhenNewOwnerIsNotMember_ReturnsBadRequest(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	nonMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	nonMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
@@ -884,8 +884,8 @@ func Test_TransferProjectOwnership_WhenNewOwnerIsNotMember_ReturnsBadRequest(t *
 func Test_TransferProjectOwnership_ThereIsOnlyOneOwner_OldOwnerBecomeAdmin(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := projects_testing.CreateTestRouter(GetProjectController(), GetMembershipController())
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProjectViaOwner(project, member, users_enums.ProjectRoleAdmin, router)

@@ -24,7 +24,7 @@ func Test_CreateApiKey_WhenUserIsProjectOwner_ApiKeyCreated(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	request := api_keys_dto.CreateApiKeyRequestDTO{
@@ -57,8 +57,8 @@ func Test_CreateApiKey_WhenUserIsProjectAdmin_ApiKeyCreated(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	admin := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	admin := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProject(project, admin, users_enums.ProjectRoleAdmin, owner.Token, router)
 
@@ -88,7 +88,7 @@ func Test_CreateApiKey_WhenUserIsGlobalAdmin_ApiKeyCreated(t *testing.T) {
 		projects_controllers.GetMembershipController(),
 	)
 	globalAdmin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	request := api_keys_dto.CreateApiKeyRequestDTO{
@@ -115,8 +115,8 @@ func Test_CreateApiKey_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProject(project, member, users_enums.ProjectRoleMember, owner.Token, router)
 
@@ -141,8 +141,8 @@ func Test_CreateApiKey_WhenUserIsNotProjectMember_ReturnsForbidden(t *testing.T)
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	nonMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	nonMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	request := api_keys_dto.CreateApiKeyRequestDTO{
@@ -166,7 +166,7 @@ func Test_CreateApiKey_WithInvalidJSON_ReturnsBadRequest(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	resp := test_utils.MakeRequest(t, router, test_utils.RequestOptions{
@@ -186,7 +186,7 @@ func Test_CreateApiKey_WithInvalidProjectID_ReturnsBadRequest(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	request := api_keys_dto.CreateApiKeyRequestDTO{
 		Name: "Test API Key",
@@ -209,7 +209,7 @@ func Test_GetApiKeys_WhenUserIsProjectOwner_ReturnsApiKeys(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	api_keys_testing.CreateTestApiKey("API Key 1", project.ID, owner.Token, router)
@@ -246,8 +246,8 @@ func Test_GetApiKeys_WhenUserIsProjectMember_ReturnsApiKeys(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProject(project, member, users_enums.ProjectRoleMember, owner.Token, router)
 
@@ -273,7 +273,7 @@ func Test_GetApiKeys_WhenUserIsGlobalAdmin_ReturnsApiKeys(t *testing.T) {
 		projects_controllers.GetMembershipController(),
 	)
 	globalAdmin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	api_keys_testing.CreateTestApiKey("Admin View Key", project.ID, owner.Token, router)
@@ -297,8 +297,8 @@ func Test_GetApiKeys_WhenUserIsNotProjectMember_ReturnsForbidden(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	nonMember := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	nonMember := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	resp := test_utils.MakeGetRequest(
@@ -317,7 +317,7 @@ func Test_UpdateApiKey_WhenUserIsProjectOwner_ApiKeyUpdated(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	apiKey := api_keys_testing.CreateTestApiKey("Original Key", project.ID, owner.Token, router)
 
@@ -345,8 +345,8 @@ func Test_UpdateApiKey_WhenUserIsProjectAdmin_ApiKeyUpdated(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	admin := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	admin := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProject(project, admin, users_enums.ProjectRoleAdmin, owner.Token, router)
 	apiKey := api_keys_testing.CreateTestApiKey("Admin Update Key", project.ID, owner.Token, router)
@@ -373,8 +373,8 @@ func Test_UpdateApiKey_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProject(project, member, users_enums.ProjectRoleMember, owner.Token, router)
 	apiKey := api_keys_testing.CreateTestApiKey("Member Update Key", project.ID, owner.Token, router)
@@ -401,7 +401,7 @@ func Test_UpdateApiKey_WithNonExistentApiKey_ReturnsBadRequest(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	newName := "Non-existent Key"
@@ -426,7 +426,7 @@ func Test_DeleteApiKey_WhenUserIsProjectOwner_ApiKeyDeleted(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	apiKey := api_keys_testing.CreateTestApiKey("Delete Key", project.ID, owner.Token, router)
 
@@ -446,8 +446,8 @@ func Test_DeleteApiKey_WhenUserIsProjectAdmin_ApiKeyDeleted(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	admin := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	admin := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProject(project, admin, users_enums.ProjectRoleAdmin, owner.Token, router)
 	apiKey := api_keys_testing.CreateTestApiKey("Admin Delete Key", project.ID, owner.Token, router)
@@ -469,7 +469,7 @@ func Test_DeleteApiKey_WhenUserIsGlobalAdmin_ApiKeyDeleted(t *testing.T) {
 		projects_controllers.GetMembershipController(),
 	)
 	globalAdmin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	apiKey := api_keys_testing.CreateTestApiKey("Global Delete Key", project.ID, owner.Token, router)
 
@@ -489,8 +489,8 @@ func Test_DeleteApiKey_WhenUserIsProjectMember_ReturnsForbidden(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 	projects_testing.AddMemberToProject(project, member, users_enums.ProjectRoleMember, owner.Token, router)
 	apiKey := api_keys_testing.CreateTestApiKey("Member Delete Key", project.ID, owner.Token, router)
@@ -511,7 +511,7 @@ func Test_DeleteApiKey_WithNonExistentApiKey_ReturnsBadRequest(t *testing.T) {
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project, _ := projects_testing.CreateTestProjectViaAPI("Test Project", owner, router)
 
 	resp := test_utils.MakeRequest(t, router, test_utils.RequestOptions{
@@ -530,8 +530,8 @@ func Test_UpdateApiKey_WithApiKeyFromDifferentProject_ReturnsBadRequest(t *testi
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner1 := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	owner2 := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner1 := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	owner2 := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project1, _ := projects_testing.CreateTestProjectViaAPI("Project 1", owner1, router)
 	project2, _ := projects_testing.CreateTestProjectViaAPI("Project 2", owner2, router)
 
@@ -559,8 +559,8 @@ func Test_DeleteApiKey_WithApiKeyFromDifferentProject_ReturnsBadRequest(t *testi
 		projects_controllers.GetProjectController(),
 		projects_controllers.GetMembershipController(),
 	)
-	owner1 := users_testing.CreateTestUser(users_enums.UserRoleMember)
-	owner2 := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	owner1 := users_testing.CreateTestUser(users_enums.UserRoleManager)
+	owner2 := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	project1, _ := projects_testing.CreateTestProjectViaAPI("Project 1", owner1, router)
 	project2, _ := projects_testing.CreateTestProjectViaAPI("Project 2", owner2, router)
 

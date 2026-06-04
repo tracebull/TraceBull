@@ -88,7 +88,7 @@ func Test_CreatePlan_WhenUserIsAdmin_PlanCreated(t *testing.T) {
 func Test_CreatePlan_WhenUserIsMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := createUserPlanTestRouter()
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	request := users_testing.CreateValidPlanRequest("Member Plan", users_enums.UserPlanTypePro)
 
@@ -340,7 +340,7 @@ func Test_UpdatePlan_WhenUserIsMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := createUserPlanTestRouter()
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	createRequest := users_testing.CreateValidPlanRequest("Original Plan", users_enums.UserPlanTypePro)
 	plan := users_testing.CreateTestPlanViaAPI(t, createRequest, admin.Token, router)
@@ -389,7 +389,7 @@ func Test_DeletePlan_WhenUsersAreUsingPlan_ReturnsBadRequest(t *testing.T) {
 	createRequest := users_testing.CreateValidPlanRequest("Plan In Use", users_enums.UserPlanTypePro)
 	plan := users_testing.CreateTestPlanViaAPI(t, createRequest, admin.Token, router)
 
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	users_testing.AssignPlanToUser(user.UserID.String(), plan.ID.String())
 
 	resp := test_utils.MakeDeleteRequest(
@@ -407,7 +407,7 @@ func Test_DeletePlan_WhenUserIsMember_ReturnsForbidden(t *testing.T) {
 	users_testing.CleanupPlans()
 	router := createUserPlanTestRouter()
 	admin := users_testing.CreateTestUser(users_enums.UserRoleAdmin)
-	member := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	member := users_testing.CreateTestUser(users_enums.UserRoleManager)
 
 	createRequest := users_testing.CreateValidPlanRequest("Plan To Delete", users_enums.UserPlanTypePro)
 	plan := users_testing.CreateTestPlanViaAPI(t, createRequest, admin.Token, router)

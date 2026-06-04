@@ -268,7 +268,7 @@ type IPTestData struct {
 
 func setupIPTest(testPrefix string, allowedIPs []string) *IPTestData {
 	router := CreateLogsTestRouter()
-	user := users_testing.CreateTestUser(users_enums.UserRoleMember)
+	user := users_testing.CreateTestUser(users_enums.UserRoleManager)
 	uniqueID := uuid.New().String()
 	projectName := fmt.Sprintf("%s %s", testPrefix, uniqueID[:8])
 
