@@ -98,7 +98,9 @@ export const HowToSendLogsFromCodeComponent = ({
 
             <div className="mb-3 flex gap-3">
               <div className="flex-1">
-                <span className="text-muted-foreground mb-1 block text-xs font-medium">TraceBull URL:</span>
+                <span className="text-muted-foreground mb-1 block text-xs font-medium">
+                  TraceBull URL:
+                </span>
                 <div className="border-border bg-muted flex items-center justify-between rounded border px-2 py-1">
                   <span className="text-foreground truncate !font-mono text-xs">{baseUrl}</span>
                   <Button
@@ -118,7 +120,9 @@ export const HowToSendLogsFromCodeComponent = ({
               </div>
 
               <div className="flex-1">
-                <span className="text-muted-foreground mb-1 block text-xs font-medium">Project ID:</span>
+                <span className="text-muted-foreground mb-1 block text-xs font-medium">
+                  Project ID:
+                </span>
                 <div className="border-border bg-muted flex items-center justify-between rounded border px-2 py-1">
                   <span className="text-foreground truncate !font-mono text-xs">{projectId}</span>
                   <Button

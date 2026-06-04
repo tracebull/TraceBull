@@ -70,7 +70,11 @@ interface SavedQuery {
 
 const MAX_LIVE_RESULTS = 5_000;
 
-export const QueryComponentComponent = ({ projectId, user, onShowLogsDialogReady }: Props): React.JSX.Element => {
+export const QueryComponentComponent = ({
+  projectId,
+  user,
+  onShowLogsDialogReady,
+}: Props): React.JSX.Element => {
   // States
   const [isShowHowToSendLogsFromCode, setIsShowHowToSendLogsFromCode] = useState(false);
   const [queryableFields, setQueryableFields] = useState<QueryableField[]>([]);
@@ -618,8 +622,8 @@ export const QueryComponentComponent = ({ projectId, user, onShowLogsDialogReady
 
       <Collapsible open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
         <div className="bg-muted/50 flex items-center gap-2 rounded-lg px-3 py-2">
-          <div className="relative min-w-[180px] max-w-[320px] flex-1">
-            <Search className="text-muted-foreground absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
+          <div className="relative max-w-[320px] min-w-[180px] flex-1">
+            <Search className="text-muted-foreground absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
             <Input
               value={messageSearch}
               onChange={(e) => {
@@ -643,7 +647,7 @@ export const QueryComponentComponent = ({ projectId, user, onShowLogsDialogReady
                   setHasSearched(false);
                   stopRealtimeStreaming();
                 }}
-                className="text-muted-foreground hover:text-foreground absolute right-2.5 top-1/2 -translate-y-1/2"
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2"
               >
                 <X className="size-3.5" />
               </button>
@@ -727,7 +731,7 @@ export const QueryComponentComponent = ({ projectId, user, onShowLogsDialogReady
               <Button
                 variant="ghost"
                 size="sm"
-                className={`gap-1.5 h-8 ${isBuilderOpen ? 'text-foreground bg-accent' : 'text-muted-foreground hover:text-foreground'}`}
+                className={`h-8 gap-1.5 ${isBuilderOpen ? 'text-foreground bg-accent' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 <Settings2 className="size-3.5" />
                 <span className="text-xs">Filters</span>
