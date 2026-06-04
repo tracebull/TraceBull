@@ -214,7 +214,7 @@ export const QueryBuilderComponent = ({
           key={`condition-${path.join('-')}`}
           className={`relative max-w-[800px] ${indentClass}`}
         >
-          <div className="border-border bg-muted flex items-start space-x-2 rounded-lg border p-3">
+          <div className="border-border bg-muted flex items-start space-x-2 rounded-lg border p-2">
             <div className="flex-1">
               <ConditionEditorComponent
                 fields={fields}
@@ -248,7 +248,7 @@ export const QueryBuilderComponent = ({
           className={`relative w-full max-w-[820px] ${indentClass} pr-4`}
         >
           <div className="bg-muted/50 rounded-lg">
-            <div className="border-border border-b px-4 py-3">
+            <div className="border-border border-b px-4 py-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Select
@@ -288,8 +288,8 @@ export const QueryBuilderComponent = ({
                 )}
               </div>
             </div>
-            <div className="p-4">
-              <div className="space-y-3">
+            <div className="p-3">
+              <div className="space-y-2">
                 {node.logic.children.map((child, index) =>
                   renderQueryNode(child, [...path, index], depth + 1),
                 )}
@@ -329,7 +329,7 @@ export const QueryBuilderComponent = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {query ? (
         renderQueryNode(query)
       ) : (

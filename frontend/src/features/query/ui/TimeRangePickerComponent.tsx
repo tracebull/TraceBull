@@ -216,48 +216,40 @@ export const TimeRangePickerComponent = ({
   }, [selectedPreset, customFrom, customTo, onGetRangeHelpers]);
 
   return (
-    <div className="space-y-3">
-      <div>
-        <label className="text-foreground mb-1 block text-sm font-medium">Time Range</label>
-        <Select value={selectedPreset} onValueChange={handlePresetChange}>
-          <SelectTrigger className="w-48">
-            <Clock className="mr-2 size-4 opacity-50" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="custom">Custom Range</SelectItem>
+    <div>
+      <Select value={selectedPreset} onValueChange={handlePresetChange}>
+        <SelectTrigger className="h-8 w-36 gap-0 px-2">
+          <Clock className="size-3.5 shrink-0 opacity-50" />
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="custom">Custom Range</SelectItem>
 
-            {presets.map((preset) => (
-              <SelectItem key={preset.value} value={preset.value}>
-                {preset.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          {presets.map((preset) => (
+            <SelectItem key={preset.value} value={preset.value}>
+              {preset.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
       {selectedPreset === 'custom' && (
-        <div>
-          <label className="text-foreground mb-1 block text-sm font-medium">
-            Select Custom Time Range
-          </label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="datetime-local"
-              value={customFrom}
-              onChange={(e) => handleCustomFromChange(e.target.value)}
-              placeholder="Start time"
-              className="w-48"
-            />
-            <span className="text-muted-foreground">to</span>
-            <Input
-              type="datetime-local"
-              value={customTo}
-              onChange={(e) => handleCustomToChange(e.target.value)}
-              placeholder="End time"
-              className="w-48"
-            />
-          </div>
+        <div className="mt-2 flex items-center gap-2">
+          <Input
+            type="datetime-local"
+            value={customFrom}
+            onChange={(e) => handleCustomFromChange(e.target.value)}
+            placeholder="Start time"
+            className="h-8 w-40"
+          />
+          <span className="text-muted-foreground">to</span>
+          <Input
+            type="datetime-local"
+            value={customTo}
+            onChange={(e) => handleCustomToChange(e.target.value)}
+            placeholder="End time"
+            className="h-8 w-40"
+          />
         </div>
       )}
     </div>

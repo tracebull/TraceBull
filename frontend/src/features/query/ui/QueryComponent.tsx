@@ -1,10 +1,13 @@
-import { Play, Radio } from 'lucide-react';
+import { ArrowDown, ArrowUp, Play, Radio, Search, Settings2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import type { Project } from '../../../entity/projects';
 import { projectApi } from '../../../entity/projects';
@@ -28,6 +31,7 @@ import { type TimeRange, TimeRangePickerComponent } from './TimeRangePickerCompo
 interface Props {
   projectId: string;
   user?: UserProfile;
+  onShowLogsDialogReady?: (fn: () => void) => void;
 }
 
 /**
@@ -66,7 +70,7 @@ interface SavedQuery {
 
 const MAX_LIVE_RESULTS = 5_000;
 
-export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.Element => {
+export const QueryComponentComponent = ({ projectId, user, onShowLogsDialogReady }: Props): React.JSX.Element => {
   // States
   const [isShowHowToSendLogsFromCode, setIsShowHowToSendLogsFromCode] = useState(false);
   const [queryableFields, setQueryableFields] = useState<QueryableField[]>([]);
@@ -84,6 +88,8 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
   const [project, setProject] = useState<Project | undefined>();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isRealtimeStreaming, setIsRealtimeStreaming] = useState(false);
+  const [messageSearch, setMessageSearch] = useState('');
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
 
   // Refs
   const timeRangeRef = useRef<() => TimeRange | null>(null);
@@ -115,13 +121,16 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
   };
 
   const handleHowToSendLogsClick = () => {
-    if (showOnboarding) {
-      handleDismissOnboarding();
-    }
-    setIsShowHowToSendLogsFromCode(!isShowHowToSendLogsFromCode);
+    if (showOnboarding) handleDismissOnboarding();
+    setIsShowHowToSendLogsFromCode(true);
   };
 
-  // Query persistence functions
+  useEffect(() => {
+    if (onShowLogsDialogReady) {
+      onShowLogsDialogReady(handleHowToSendLogsClick);
+    }
+  }, [onShowLogsDialogReady, showOnboarding]);
+
   const getSavedQueryKey = (projectId: string): string => {
     return `tracebull-query-${projectId}`;
   };
@@ -258,12 +267,39 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
     return { isValid: true };
   };
 
+  const buildEffectiveQuery = (): QueryNode | null => {
+    const messageCondition: QueryNode | null = messageSearch.trim()
+      ? {
+          type: 'condition',
+          condition: { field: 'message', operator: 'contains' as const, value: messageSearch },
+        }
+      : null;
+
+    if (!messageCondition && !currentQuery) return null;
+    if (!messageCondition) return currentQuery;
+    if (!currentQuery) return messageCondition;
+
+    return {
+      type: 'logical',
+      logic: { operator: 'and' as const, children: [messageCondition, currentQuery] },
+    };
+  };
+
+  const countConditions = (node: QueryNode | null): number => {
+    if (!node) return 0;
+    if (node.type === 'condition') return 1;
+    if (node.type === 'logical' && node.logic) {
+      return node.logic.children.reduce((sum, child) => sum + countConditions(child), 0);
+    }
+    return 0;
+  };
+
   const executeQuery = async (isLoadMore = false) => {
     stopRealtimeStreaming();
 
     // Validate query before execution (only for new queries, not load more)
     if (!isLoadMore) {
-      const validation = validateQuery(currentQuery);
+      const validation = validateQuery(buildEffectiveQuery());
       if (!validation.isValid) {
         toastMessage.error(validation.error!);
         return;
@@ -272,8 +308,9 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
 
     setIsExecuting(true);
     try {
+      const effectiveQuery = buildEffectiveQuery();
       const request: LogQueryRequest = {
-        query: currentQuery, // Send null when no query is built
+        query: effectiveQuery,
         limit: pageSize,
         offset: isLoadMore ? queryResults.length : 0,
         sortOrder,
@@ -318,7 +355,7 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
       setHasMoreResults(currentResultsCount < response.total);
 
       if (!isLoadMore) {
-        const queryType = currentQuery ? 'matching your query' : '(showing all logs)';
+        const queryType = effectiveQuery ? 'matching your query' : '(showing all logs)';
         const executedInMs = Math.round(parseFloat(response.executedIn));
         toastMessage.success(
           `Found ${response.total} logs ${queryType} (${executedInMs.toLocaleString()} ms)`,
@@ -388,7 +425,8 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
   };
 
   const startRealtimeStreaming = async () => {
-    const validation = validateQuery(currentQuery);
+    const effectiveQuery = buildEffectiveQuery();
+    const validation = validateQuery(effectiveQuery);
     if (!validation.isValid) {
       toastMessage.error(validation.error!);
       return;
@@ -403,7 +441,7 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
 
     const startFrom = getNewestResultTimestamp();
     const request: LogQueryRequest = {
-      query: currentQuery,
+      query: effectiveQuery,
       limit: pageSize,
       offset: 0,
       sortOrder: 'asc',
@@ -477,6 +515,7 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
     }
 
     toastMessage.success(`Field "${fieldName}" added to query`);
+    setIsBuilderOpen(true);
 
     setTimeout(() => {
       queryBuilderRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -574,12 +613,43 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
   }, [isInitialLoad, user]);
 
   return (
-    <div ref={containerRef} className="ml-3 h-full w-full space-y-3 overflow-y-auto">
+    <div ref={containerRef} className="h-full w-full space-y-2 overflow-y-auto">
       <FloatingTopButtonComponent containerRef={containerRef} />
 
-      {/* Query Builder Section */}
-      <div ref={queryBuilderRef} className="bg-muted/50 w-full rounded-lg">
-        <div className="flex items-center px-6 py-4">
+      <Collapsible open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
+        <div className="bg-muted/50 flex items-center gap-2 rounded-lg px-3 py-2">
+          <div className="relative min-w-[180px] max-w-[320px] flex-1">
+            <Search className="text-muted-foreground absolute left-2.5 top-1/2 size-4 -translate-y-1/2" />
+            <Input
+              value={messageSearch}
+              onChange={(e) => {
+                setMessageSearch(e.target.value);
+                if (hasSearched) setHasSearched(false);
+                stopRealtimeStreaming();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleExecuteOrRefresh();
+                }
+              }}
+              placeholder="Search logs..."
+              className="h-8 pr-8 pl-9"
+            />
+            {messageSearch && (
+              <button
+                onClick={() => {
+                  setMessageSearch('');
+                  setHasSearched(false);
+                  stopRealtimeStreaming();
+                }}
+                className="text-muted-foreground hover:text-foreground absolute right-2.5 top-1/2 -translate-y-1/2"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+
           <TimeRangePickerComponent
             onChange={() => {
               setHasSearched(false);
@@ -593,100 +663,103 @@ export const QueryComponentComponent = ({ projectId, user }: Props): React.JSX.E
             }}
           />
 
-          <div className="ml-5">
-            <label className="text-muted-foreground mb-1 block text-sm font-medium">
-              Sort Order
-            </label>
-            <div className="flex items-center gap-2">
-              <span
-                className={`text-sm ${sortOrder === 'desc' ? 'text-foreground' : 'text-muted-foreground'}`}
-              >
-                Newest first
-              </span>
-              <Switch
-                checked={sortOrder === 'asc'}
-                onCheckedChange={(checked) => {
-                  setSortOrder(checked ? 'asc' : 'desc');
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
                   setHasSearched(false);
                   stopRealtimeStreaming();
                 }}
-                size="sm"
-              />
-              <span
-                className={`text-sm ${sortOrder === 'asc' ? 'text-foreground' : 'text-muted-foreground'}`}
+                className="h-8 w-8 p-0"
               >
-                Oldest first
-              </span>
-            </div>
-          </div>
+                {sortOrder === 'desc' ? (
+                  <ArrowDown className="size-3.5" />
+                ) : (
+                  <ArrowUp className="size-3.5" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {sortOrder === 'desc' ? 'Newest first' : 'Oldest first'}
+            </TooltipContent>
+          </Tooltip>
 
-          <div className="ml-auto" ref={howToSendLogsButtonRef}>
-            <Button variant="outline" onClick={handleHowToSendLogsClick} disabled={isExecuting}>
-              How to send logs from code?
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1">
+                <Radio
+                  className={`size-3.5 ${isRealtimeStreaming ? 'text-primary animate-pulse' : 'text-muted-foreground'}`}
+                />
+                <Switch
+                  checked={isRealtimeStreaming}
+                  onCheckedChange={handleRealtimeToggle}
+                  disabled={isExecuting}
+                  size="sm"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Realtime</TooltipContent>
+          </Tooltip>
+
+          {isExecuting ? (
+            <Spinner className="size-5" />
+          ) : (
+            <Button
+              onClick={handleExecuteOrRefresh}
+              size="sm"
+              variant={hasSearched ? 'outline' : 'default'}
+              className={`h-8 gap-1.5 ${
+                hasSearched
+                  ? 'border-primary text-primary hover:border-primary/80 hover:text-primary/80'
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              }`}
+            >
+              <Play className="size-3.5" />
+              {hasSearched ? 'Refresh' : 'Run'}
             </Button>
+          )}
+
+          <div className="ml-auto">
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`gap-1.5 h-8 ${isBuilderOpen ? 'text-foreground bg-accent' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <Settings2 className="size-3.5" />
+                <span className="text-xs">Filters</span>
+                {currentQuery && (
+                  <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+                    {countConditions(currentQuery)}
+                  </Badge>
+                )}
+              </Button>
+            </CollapsibleTrigger>
           </div>
         </div>
 
         {project?.plan?.warningText && (
-          <div className="ml-6 text-orange-600 opacity-60">{project.plan.warningText}</div>
+          <div className="text-orange-600 opacity-60">{project.plan.warningText}</div>
         )}
 
-        <div className="space-y-4 p-6">
-          <QueryBuilderComponent
-            fields={queryableFields}
-            query={currentQuery}
-            onChange={(query) => {
-              setCurrentQuery(query);
-              setHasSearched(false);
-              stopRealtimeStreaming();
-            }}
-            onFieldSearch={searchQueryableFields}
-          />
-
-          <Separator />
-
-          {/* Execution Controls */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Radio
-                className={`size-4 ${
-                  isRealtimeStreaming ? 'text-primary' : 'text-muted-foreground'
-                }`}
-              />
-              <span
-                className={`text-sm ${
-                  isRealtimeStreaming ? 'text-foreground' : 'text-muted-foreground'
-                }`}
-              >
-                Realtime
-              </span>
-              <Switch
-                checked={isRealtimeStreaming}
-                onCheckedChange={handleRealtimeToggle}
-                disabled={isExecuting}
-                size="sm"
-              />
-            </div>
-            {isExecuting ? (
-              <Spinner className="ml-auto" />
-            ) : (
-              <Button
-                onClick={handleExecuteOrRefresh}
-                size="lg"
-                variant={hasSearched ? 'outline' : 'default'}
-                className={`ml-auto ${
-                  hasSearched
-                    ? 'border-primary text-primary hover:border-primary/80 hover:text-primary/80'
-                    : 'bg-primary text-primary-foreground hover:bg-primary/90'
-                }`}
-              >
-                <Play className="mr-2 size-4" />
-                {hasSearched ? 'Refresh Query' : 'Execute Query'}
-              </Button>
-            )}
+        <CollapsibleContent>
+          <div ref={queryBuilderRef} className="bg-muted/30 rounded-lg border p-4">
+            <QueryBuilderComponent
+              fields={queryableFields}
+              query={currentQuery}
+              onChange={(query) => {
+                setCurrentQuery(query);
+                setHasSearched(false);
+                stopRealtimeStreaming();
+              }}
+              onFieldSearch={searchQueryableFields}
+            />
           </div>
-        </div>
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Results Section */}
       <QueryResultsComponent

@@ -1,5 +1,5 @@
-import { FolderCog, Key, Menu, Search, Settings, User, UserCog, Users } from 'lucide-react';
-import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { Code, FolderCog, Key, Menu, Search, Settings, User, UserCog, Users } from 'lucide-react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -94,6 +94,7 @@ export const MainScreenComponent = () => {
   const [diskUsage, setDiskUsage] = useState<DiskUsage | undefined>(undefined);
   const [user, setUser] = useState<UserProfile | undefined>(undefined);
   const [globalSettings, setGlobalSettings] = useState<UsersSettings | undefined>(undefined);
+  const showLogsDialogFn = useRef<(() => void) | null>(null);
 
   const [projects, setProjects] = useState<ProjectResponse[]>([]);
   const [selectedProject, setSelectedProject] = useState<ProjectResponse | undefined>(undefined);
@@ -280,7 +281,13 @@ export const MainScreenComponent = () => {
           <ProjectMembershipComponent projectResponse={selectedProject} user={user} />
         )}
         {selectedTab === 'search' && selectedProject && user && (
-          <QueryComponentComponent projectId={selectedProject.id} user={user} />
+          <QueryComponentComponent
+            projectId={selectedProject.id}
+            user={user}
+            onShowLogsDialogReady={(fn) => {
+              showLogsDialogFn.current = fn;
+            }}
+          />
         )}
       </>
     );
@@ -409,10 +416,21 @@ export const MainScreenComponent = () => {
           )}
 
           <div className={`flex flex-1 flex-col overflow-hidden ${isMobile ? '' : 'ml-3'}`}>
-            <div className="flex-shrink-0 px-4 py-2">
+            <div className="flex flex-shrink-0 items-center justify-between px-4 py-2">
               <h1 className="text-muted-foreground text-sm font-semibold">
                 {PAGE_TITLES[selectedTab]}
               </h1>
+              {selectedTab === 'search' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground h-7 gap-1.5 text-xs"
+                  onClick={() => showLogsDialogFn.current?.()}
+                >
+                  <Code className="size-3.5" />
+                  How to send logs
+                </Button>
+              )}
             </div>
             <div className="flex-1 overflow-y-auto">
               {isLoading ? (

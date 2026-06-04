@@ -1046,7 +1046,7 @@ export function CodeUsageComponent({
   logbullApiKey = 'LOGBULL_API_KEY',
   isLogBullApiKeyRequired = false,
 }: Props) {
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>('Python');
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>('Java');
   const [selectedIntegration, setSelectedIntegration] = useState(0);
   const [selectedInstallMethod, setSelectedInstallMethod] = useState(0);
   const [copiedInstallation, setCopiedInstallation] = useState(false);
@@ -1172,14 +1172,13 @@ export function CodeUsageComponent({
   };
 
   return (
-    <div className="mx-auto">
-      {/* First row: Languages */}
-      <div className="mb-4 flex flex-wrap gap-2">
+    <div>
+      <div className="mb-2 flex flex-wrap gap-1">
         {languages.map((lang) => (
           <button
             key={lang}
             onClick={() => handleLanguageChange(lang)}
-            className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`cursor-pointer rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
               selectedLanguage === lang
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-accent'
@@ -1190,15 +1189,14 @@ export function CodeUsageComponent({
         ))}
       </div>
 
-      {/* Second row: Integrations */}
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-2 flex flex-wrap gap-1">
         {currentConfig.integrations.map((integration, index) => (
           <button
             key={index}
             onClick={() => handleIntegrationChange(index)}
-            className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`cursor-pointer rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
               selectedIntegration === index
-                ? 'bg-secondary text-secondary-foreground ring-primary ring-2'
+                ? 'bg-secondary text-secondary-foreground ring-primary ring-1'
                 : 'bg-muted text-muted-foreground hover:bg-accent'
             }`}
           >
@@ -1207,16 +1205,15 @@ export function CodeUsageComponent({
         ))}
       </div>
 
-      {/* Third row: Installation Methods (only if multiple methods exist) */}
       {hasMultipleInstallMethods && (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-2 flex flex-wrap gap-1">
           {(currentConfig.installation as InstallationMethod[]).map((method, index) => (
             <button
               key={index}
               onClick={() => handleInstallMethodChange(index)}
-              className={`cursor-pointer rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`cursor-pointer rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 selectedInstallMethod === index
-                  ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-600'
+                  ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-600'
                   : 'bg-muted text-muted-foreground hover:bg-accent'
               }`}
             >
@@ -1228,43 +1225,16 @@ export function CodeUsageComponent({
 
       {/* Installation section */}
       {getInstallationCommand() && (
-        <div className="bg-muted mb-4 overflow-hidden rounded-lg p-4">
-          <div className="text-foreground mb-2 text-sm font-semibold">Installation</div>
-          <div className="relative overflow-auto rounded-lg bg-[#2d2d2d] shadow-lg">
-            {/* Copy button */}
+        <div className="bg-muted mb-2 overflow-hidden rounded-md p-3">
+          <div className="text-foreground mb-1.5 text-xs font-semibold">Installation</div>
+          <div className="relative overflow-auto rounded-md bg-[#2d2d2d]">
             <button
               onClick={handleCopyInstallation}
-              className="absolute top-4 right-4 z-10 cursor-pointer rounded-md bg-gray-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gray-600"
+              className="absolute top-2 right-2 z-10 cursor-pointer rounded bg-gray-700 px-2 py-1 text-xs text-white hover:bg-gray-600"
             >
-              {copiedInstallation ? (
-                <span className="flex items-center gap-1">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  Copied!
-                </span>
-              ) : (
-                <span className="flex items-center gap-1">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
-                  </svg>
-                  Copy
-                </span>
-              )}
+              {copiedInstallation ? 'Copied!' : 'Copy'}
             </button>
-
-            {/* Syntax highlighted code */}
-            <div className="m-0 rounded-lg p-6 pr-20 !font-mono text-sm leading-6">
+            <div className="m-0 rounded-md p-3 pr-14 text-xs leading-5">
               <SyntaxHighlighter
                 language={
                   hasMultipleInstallMethods
@@ -1287,45 +1257,17 @@ export function CodeUsageComponent({
         </div>
       )}
 
-      {/* Configuration section (only if configuration exists) */}
       {hasConfiguration && (
-        <div className="bg-muted mb-4 overflow-hidden rounded-lg p-4">
-          <div className="text-foreground mb-2 text-sm font-semibold">Configuration</div>
-          <div className="relative overflow-auto rounded-lg bg-[#2d2d2d] shadow-lg">
-            {/* Copy button */}
+        <div className="bg-muted mb-2 overflow-hidden rounded-md p-3">
+          <div className="text-foreground mb-1.5 text-xs font-semibold">Configuration</div>
+          <div className="relative overflow-auto rounded-md bg-[#2d2d2d]">
             <button
               onClick={handleCopyConfiguration}
-              className="absolute top-4 right-4 z-10 cursor-pointer rounded-md bg-gray-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gray-600"
+              className="absolute top-2 right-2 z-10 cursor-pointer rounded bg-gray-700 px-2 py-1 text-xs text-white hover:bg-gray-600"
             >
-              {copiedConfiguration ? (
-                <span className="flex items-center gap-1">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  Copied!
-                </span>
-              ) : (
-                <span className="flex items-center gap-1">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
-                  </svg>
-                  Copy
-                </span>
-              )}
+              {copiedConfiguration ? 'Copied!' : 'Copy'}
             </button>
-
-            {/* Syntax highlighted code */}
-            <div className="m-0 rounded-lg p-6 pr-20 text-sm leading-6">
+            <div className="m-0 rounded-md p-3 pr-14 text-xs leading-5">
               <SyntaxHighlighter
                 language={currentIntegration.language}
                 style={tomorrow}
@@ -1343,44 +1285,16 @@ export function CodeUsageComponent({
         </div>
       )}
 
-      {/* Usage section */}
-      <div className="bg-muted mb-4 overflow-hidden rounded-lg p-4">
-        <div className="text-foreground mb-2 text-sm font-semibold">Usage</div>
-        <div className="relative overflow-auto rounded-lg bg-[#2d2d2d] shadow-lg">
-          {/* Copy button */}
+      <div className="bg-muted overflow-hidden rounded-md p-3">
+        <div className="text-foreground mb-1.5 text-xs font-semibold">Usage</div>
+        <div className="relative overflow-auto rounded-md bg-[#2d2d2d]">
           <button
             onClick={handleCopyUsage}
-            className="absolute top-4 right-4 z-10 cursor-pointer rounded-md bg-gray-700 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gray-600"
+            className="absolute top-2 right-2 z-10 cursor-pointer rounded bg-gray-700 px-2 py-1 text-xs text-white hover:bg-gray-600"
           >
-            {copiedUsage ? (
-              <span className="flex items-center gap-1">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                Copied!
-              </span>
-            ) : (
-              <span className="flex items-center gap-1">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                  />
-                </svg>
-                Copy
-              </span>
-            )}
+            {copiedUsage ? 'Copied!' : 'Copy'}
           </button>
-
-          {/* Syntax highlighted code */}
-          <div className="m-0 rounded-lg p-6 pr-20 text-sm leading-6">
+          <div className="m-0 rounded-md p-3 pr-14 text-xs leading-5">
             <SyntaxHighlighter
               language={currentIntegration.language}
               style={tomorrow}

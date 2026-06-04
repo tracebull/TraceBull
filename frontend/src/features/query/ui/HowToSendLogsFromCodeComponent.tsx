@@ -56,20 +56,20 @@ export const HowToSendLogsFromCodeComponent = ({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="flex max-h-[85vh] max-w-[1000px] flex-col overflow-hidden p-0">
-        <DialogHeader className="border-border shrink-0 border-b px-6 py-4">
+      <DialogContent className="flex max-h-[85vh] max-w-[800px] flex-col overflow-hidden p-0">
+        <DialogHeader className="border-border shrink-0 border-b px-4 py-3">
           <DialogTitle>How to send logs from code?</DialogTitle>
         </DialogHeader>
 
         {!project ? (
-          <div className="flex justify-center py-8">
+          <div className="flex justify-center py-4">
             <Spinner />
           </div>
         ) : (
-          <div className="overflow-y-auto px-6 py-4">
-            <div className="mb-4">
+          <div className="overflow-y-auto px-4 py-3">
+            <div className="mb-3">
               {project.isApiKeyRequired && (
-                <div className="border-status-warning bg-status-warning mb-4 rounded border px-3 py-2">
+                <div className="border-status-warning bg-status-warning mb-2 rounded border px-2 py-1.5 text-xs">
                   <strong className="text-status-warning-foreground">
                     API Key Required: This project requires an X-API-Key header. Create an API key
                     in your project settings.
@@ -78,7 +78,7 @@ export const HowToSendLogsFromCodeComponent = ({
               )}
 
               {project.isFilterByDomain && (
-                <div className="border-status-info bg-status-info mb-4 rounded border px-3 py-2">
+                <div className="border-status-info bg-status-info mb-2 rounded border px-2 py-1.5 text-xs">
                   <strong className="text-status-info-foreground">
                     Domain Filtering: This project filters by domain. Allowed domains:{' '}
                     {project.allowedDomains.join(', ')}
@@ -87,7 +87,7 @@ export const HowToSendLogsFromCodeComponent = ({
               )}
 
               {project.isFilterByIp && (
-                <div className="border-status-info bg-status-info mb-4 rounded border px-3 py-2">
+                <div className="border-status-info bg-status-info mb-2 rounded border px-2 py-1.5 text-xs">
                   <strong className="text-status-info-foreground">
                     IP Filtering: This project filters by IP address. Allowed IPs:{' '}
                     {project.allowedIps.join(', ')}
@@ -96,17 +96,15 @@ export const HowToSendLogsFromCodeComponent = ({
               )}
             </div>
 
-            <div className="mb-4 flex">
-              <div className="mr-5 w-80">
-                <div className="mb-1">
-                  <span className="text-muted-foreground text-xs font-medium">TraceBull URL:</span>
-                </div>
-                <div className="border-border bg-muted flex items-center justify-between rounded border px-3 py-1.5">
+            <div className="mb-3 flex gap-3">
+              <div className="flex-1">
+                <span className="text-muted-foreground mb-1 block text-xs font-medium">TraceBull URL:</span>
+                <div className="border-border bg-muted flex items-center justify-between rounded border px-2 py-1">
                   <span className="text-foreground truncate !font-mono text-xs">{baseUrl}</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground ml-2 size-5 min-w-5 p-0.5"
+                    className="text-muted-foreground ml-1 size-4 min-w-4 p-0"
                     onClick={() => handleCopyToClipboard(baseUrl)}
                     disabled={copyingStates['logbull-url']}
                   >
@@ -119,16 +117,14 @@ export const HowToSendLogsFromCodeComponent = ({
                 </div>
               </div>
 
-              <div className="w-80">
-                <div className="mb-1">
-                  <span className="text-muted-foreground text-xs font-medium">Project ID:</span>
-                </div>
-                <div className="border-border bg-muted flex items-center justify-between rounded border px-3 py-1.5">
+              <div className="flex-1">
+                <span className="text-muted-foreground mb-1 block text-xs font-medium">Project ID:</span>
+                <div className="border-border bg-muted flex items-center justify-between rounded border px-2 py-1">
                   <span className="text-foreground truncate !font-mono text-xs">{projectId}</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground ml-2 size-5 min-w-5 p-0.5"
+                    className="text-muted-foreground ml-1 size-4 min-w-4 p-0"
                     onClick={() => handleCopyToClipboard(projectId)}
                     disabled={copyingStates['project-id']}
                   >
