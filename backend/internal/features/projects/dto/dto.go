@@ -21,9 +21,10 @@ type CreateProjectRequestDTO struct {
 }
 
 type ProjectResponseDTO struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
+	ID               uuid.UUID `json:"id"`
+	Name             string    `json:"name"`
+	CreatedAt        time.Time `json:"createdAt"`
+	IsApiKeyRequired bool      `json:"isApiKeyRequired"`
 
 	// User's role in this project (populated when fetching for specific user)
 	UserRole *users_enums.ProjectRole `json:"userRole,omitempty"`

@@ -31,9 +31,10 @@ import { ProjectAuditLogsComponent } from './ProjectAuditLogsComponent';
 interface Props {
   projectResponse: ProjectResponse;
   user: UserProfile;
+  onProjectUpdated?: (project: ProjectResponse) => void;
 }
 
-export function ProjectSettingsComponent({ projectResponse, user }: Props) {
+export function ProjectSettingsComponent({ projectResponse, user, onProjectUpdated }: Props) {
   const [project, setProject] = useState<Project | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -274,6 +275,13 @@ export function ProjectSettingsComponent({ projectResponse, user }: Props) {
       const updatedProject = await projectApi.updateProject(project.id, updateData);
       setProject(updatedProject);
       setFormProject(updatedProject);
+      onProjectUpdated?.({
+        id: updatedProject.id,
+        name: updatedProject.name,
+        createdAt: updatedProject.createdAt,
+        isApiKeyRequired: updatedProject.isApiKeyRequired,
+        userRole: projectResponse.userRole,
+      });
 
       // Only reset security policy changes since that's what we saved
       setSecurityPolicyChanges(false);

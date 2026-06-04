@@ -149,6 +149,12 @@ export const MainScreenComponent = () => {
   }, [selectedProject]);
 
   useEffect(() => {
+    if (selectedTab === 'api-keys' && selectedProject?.isApiKeyRequired !== true) {
+      setSelectedTab('search');
+    }
+  }, [selectedProject, selectedTab]);
+
+  useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 450);
     };
@@ -174,6 +180,17 @@ export const MainScreenComponent = () => {
   const handleNavClick = (tab: TabId) => {
     setSelectedTab(tab);
     setSheetOpen(false);
+  };
+
+  const handleProjectUpdated = (updatedProject: ProjectResponse) => {
+    setSelectedProject(updatedProject);
+    setProjects((prev) =>
+      prev.map((project) => (project.id === updatedProject.id ? updatedProject : project)),
+    );
+
+    if (!updatedProject.isApiKeyRequired && selectedTab === 'api-keys') {
+      setSelectedTab('search');
+    }
   };
 
   const isUsedMoreThan95Percent =
@@ -209,7 +226,7 @@ export const MainScreenComponent = () => {
       tab: 'api-keys',
       icon: Key,
       adminOnly: false,
-      visible: !!selectedProject,
+      visible: selectedProject?.isApiKeyRequired === true,
       hasSeparator: false,
     },
     {
@@ -272,9 +289,13 @@ export const MainScreenComponent = () => {
         {selectedTab === 'logbull-settings' && <SettingsComponent />}
         {selectedTab === 'users' && <UsersComponent globalSettings={globalSettings} user={user} />}
         {selectedTab === 'settings' && selectedProject && user && (
-          <ProjectSettingsComponent projectResponse={selectedProject} user={user} />
+          <ProjectSettingsComponent
+            projectResponse={selectedProject}
+            user={user}
+            onProjectUpdated={handleProjectUpdated}
+          />
         )}
-        {selectedTab === 'api-keys' && selectedProject && user && (
+        {selectedTab === 'api-keys' && selectedProject?.isApiKeyRequired && user && (
           <ProjectApiKeysComponent projectResponse={selectedProject} user={user} />
         )}
         {selectedTab === 'members' && selectedProject && user && (

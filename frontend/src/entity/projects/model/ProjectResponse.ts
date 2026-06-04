@@ -4,5 +4,6 @@ export interface ProjectResponse {
   id: string;
   name: string;
   createdAt: Date;
+  isApiKeyRequired: boolean;
   userRole?: ProjectRole;
 }

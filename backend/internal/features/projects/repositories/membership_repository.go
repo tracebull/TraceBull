@@ -108,13 +108,17 @@ func (r *MembershipRepository) GetProjectsWithRolesByUserID(
 	results := make([]projects_dto.ProjectResponseDTO, 0)
 
 	if userRole == users_enums.UserRoleAdmin {
-		err := storage.GetDb().Table("projects").Order("name ASC").Scan(&results).Error
+		err := storage.GetDb().
+			Table("projects").
+			Select("id, name, created_at, is_api_key_required").
+			Order("name ASC").
+			Scan(&results).Error
 		return results, err
 	}
 
 	err := storage.GetDb().
 		Table("projects p").
-		Select("p.id, p.name, p.created_at, pm.role as user_role").
+		Select("p.id, p.name, p.created_at, p.is_api_key_required, pm.role as user_role").
 		Joins("JOIN project_memberships pm ON p.id = pm.project_id").
 		Where("pm.user_id = ?", userID).
 		Order("p.name ASC").

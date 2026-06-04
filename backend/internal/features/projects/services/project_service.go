@@ -112,10 +112,11 @@ func (s *ProjectService) CreateProject(
 
 	ownerRole := users_enums.ProjectRoleOwner
 	return &projects_dto.ProjectResponseDTO{
-		ID:        project.ID,
-		Name:      project.Name,
-		CreatedAt: project.CreatedAt,
-		UserRole:  &ownerRole,
+		ID:               project.ID,
+		Name:             project.Name,
+		CreatedAt:        project.CreatedAt,
+		IsApiKeyRequired: project.IsApiKeyRequired,
+		UserRole:         &ownerRole,
 	}, nil
 }
 
