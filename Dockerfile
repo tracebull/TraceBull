@@ -26,7 +26,7 @@ ARG TARGETARCH
 
 RUN mkdir -p /target-tools
 RUN GOBIN=/target-tools CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
-    go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
+    go install github.com/pressly/goose/v3/cmd/goose@v3.26.0
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.4
 
 WORKDIR /app

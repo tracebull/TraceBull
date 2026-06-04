@@ -1,5 +1,8 @@
+name: tracebull
+
 services:
   tracebull:
+    image: tracebull
     build:
       context: .
       dockerfile: Dockerfile
