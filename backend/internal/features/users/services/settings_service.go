@@ -37,31 +37,42 @@ func (s *SettingsService) UpdateSettings(
 	auditLogMessages := []string{}
 
 	if request.IsAllowExternalRegistrations != existingSettings.IsAllowExternalRegistrations {
-		existingSettings.IsAllowExternalRegistrations = request.IsAllowExternalRegistrations
+		oldValue := existingSettings.IsAllowExternalRegistrations
 		auditLogMessages = append(
 			auditLogMessages,
 			fmt.Sprintf(
 				"isAllowExternalRegistrations: %t -> %t",
-				existingSettings.IsAllowExternalRegistrations,
+				oldValue,
 				request.IsAllowExternalRegistrations,
 			),
 		)
+		existingSettings.IsAllowExternalRegistrations = request.IsAllowExternalRegistrations
 	}
 
-	if request.IsAllowMemberInvitations != existingSettings.IsAllowMemberInvitations {
-		existingSettings.IsAllowMemberInvitations = request.IsAllowMemberInvitations
+	if request.IsAllowManagerInvitations != existingSettings.IsAllowManagerInvitations {
+		oldValue := existingSettings.IsAllowManagerInvitations
 		auditLogMessages = append(
 			auditLogMessages,
 			fmt.Sprintf(
-				"isAllowMemberInvitations: %t -> %t",
-				existingSettings.IsAllowMemberInvitations,
-				request.IsAllowMemberInvitations,
+				"isAllowManagerInvitations: %t -> %t",
+				oldValue,
+				request.IsAllowManagerInvitations,
 			),
 		)
+		existingSettings.IsAllowManagerInvitations = request.IsAllowManagerInvitations
 	}
 
-	if request.IsMemberAllowedToCreateProjects != existingSettings.IsMemberAllowedToCreateProjects {
-		existingSettings.IsMemberAllowedToCreateProjects = request.IsMemberAllowedToCreateProjects
+	if request.IsManagerAllowedToCreateProjects != existingSettings.IsManagerAllowedToCreateProjects {
+		oldValue := existingSettings.IsManagerAllowedToCreateProjects
+		auditLogMessages = append(
+			auditLogMessages,
+			fmt.Sprintf(
+				"isManagerAllowedToCreateProjects: %t -> %t",
+				oldValue,
+				request.IsManagerAllowedToCreateProjects,
+			),
+		)
+		existingSettings.IsManagerAllowedToCreateProjects = request.IsManagerAllowedToCreateProjects
 	}
 
 	if err := s.userSettingsRepository.UpdateSettings(existingSettings); err != nil {

@@ -27,13 +27,12 @@ func (User) TableName() string {
 	return "users"
 }
 
-// Permission methods
 func (u *User) CanInviteUsers(settings *UsersSettings) bool {
 	if u.Role == users_enums.UserRoleAdmin {
 		return true
 	}
 
-	return u.Role == users_enums.UserRoleMember && settings.IsAllowMemberInvitations
+	return u.Role == users_enums.UserRoleManager && settings.IsAllowManagerInvitations
 }
 
 func (u *User) CanManageUsers() bool {
@@ -48,7 +47,7 @@ func (u *User) CanCreateProjects(settings *UsersSettings) bool {
 	if u.Role == users_enums.UserRoleAdmin {
 		return true
 	}
-	return u.Role == users_enums.UserRoleMember && settings.IsMemberAllowedToCreateProjects
+	return u.Role == users_enums.UserRoleManager && settings.IsManagerAllowedToCreateProjects
 }
 
 func (u *User) IsActiveUser() bool {

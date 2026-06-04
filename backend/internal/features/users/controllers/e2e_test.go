@@ -147,7 +147,7 @@ func Test_UserLifecycleE2E_CompletesSuccessfully(t *testing.T) {
 	)
 	assert.Equal(t, signinResponse.UserID, profileResponse.ID)
 	assert.Equal(t, userEmail, profileResponse.Email)
-	assert.Equal(t, users_enums.UserRoleMember, profileResponse.Role)
+	assert.Equal(t, users_enums.UserRoleManager, profileResponse.Role)
 	assert.True(t, profileResponse.IsActive)
 }
 

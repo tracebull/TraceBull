@@ -17,10 +17,10 @@ func (r *UsersSettingsRepository) GetSettings() (*user_models.UsersSettings, err
 		if err == gorm.ErrRecordNotFound {
 			// Create default settings if none exist
 			defaultSettings := &user_models.UsersSettings{
-				ID:                              uuid.New(),
-				IsAllowExternalRegistrations:    true,
-				IsAllowMemberInvitations:        true,
-				IsMemberAllowedToCreateProjects: true,
+				ID:                               uuid.New(),
+				IsAllowExternalRegistrations:     true,
+				IsAllowManagerInvitations:        true,
+				IsManagerAllowedToCreateProjects: true,
 			}
 
 			if createErr := storage.GetDb().Create(defaultSettings).Error; createErr != nil {

@@ -5,11 +5,11 @@ import (
 )
 
 func EnableMemberInvitations() {
-	updateUsersSetting("is_allow_member_invitations", true)
+	updateUsersSetting("is_allow_manager_invitations", true)
 }
 
 func DisableMemberInvitations() {
-	updateUsersSetting("is_allow_member_invitations", false)
+	updateUsersSetting("is_allow_manager_invitations", false)
 }
 
 func EnableExternalRegistrations() {
@@ -21,11 +21,11 @@ func DisableExternalRegistrations() {
 }
 
 func EnableMemberProjectCreation() {
-	updateUsersSetting("is_member_allowed_to_create_projects", true)
+	updateUsersSetting("is_manager_allowed_to_create_projects", true)
 }
 
 func DisableMemberProjectCreation() {
-	updateUsersSetting("is_member_allowed_to_create_projects", false)
+	updateUsersSetting("is_manager_allowed_to_create_projects", false)
 }
 
 func ResetSettingsToDefaults() {
@@ -36,8 +36,8 @@ func ResetSettingsToDefaults() {
 	}
 
 	settings.IsAllowExternalRegistrations = true
-	settings.IsAllowMemberInvitations = true
-	settings.IsMemberAllowedToCreateProjects = true
+	settings.IsAllowManagerInvitations = true
+	settings.IsManagerAllowedToCreateProjects = true
 
 	err = repository.UpdateSettings(settings)
 	if err != nil {
@@ -53,12 +53,12 @@ func updateUsersSetting(column string, value bool) {
 	}
 
 	switch column {
-	case "is_allow_member_invitations":
-		settings.IsAllowMemberInvitations = value
+	case "is_allow_manager_invitations":
+		settings.IsAllowManagerInvitations = value
 	case "is_allow_external_registrations":
 		settings.IsAllowExternalRegistrations = value
-	case "is_member_allowed_to_create_projects":
-		settings.IsMemberAllowedToCreateProjects = value
+	case "is_manager_allowed_to_create_projects":
+		settings.IsManagerAllowedToCreateProjects = value
 	}
 
 	err = repository.UpdateSettings(settings)
