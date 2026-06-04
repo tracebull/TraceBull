@@ -24,9 +24,11 @@ FROM --platform=$BUILDPLATFORM golang:1.24.0 AS backend-build
 ARG TARGETOS
 ARG TARGETARCH
 
-RUN mkdir -p /target-tools
-RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
-    go build -o /target-tools/goose github.com/pressly/goose/v3/cmd/goose@v3.26.0
+RUN mkdir -p /target-tools /tmp/goose-build && cd /tmp/goose-build && \
+    go mod init temp && \
+    go get github.com/pressly/goose/v3/cmd/goose@v3.26.0 && \
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    go build -o /target-tools/goose github.com/pressly/goose/v3/cmd/goose
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.4
 
 WORKDIR /app
