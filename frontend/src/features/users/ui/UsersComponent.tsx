@@ -278,8 +278,9 @@ export function UsersComponent({ globalSettings, user }: Props) {
       setIsAddUserOpen(false);
       resetAddUserForm();
       loadUsers(true);
-    } catch (error: any) {
-      toastMessage.error(error?.message || 'Failed to create user');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to create user';
+      toastMessage.error(StringUtils.capitalizeFirstLetter(message));
     } finally {
       setIsCreatingUser(false);
     }

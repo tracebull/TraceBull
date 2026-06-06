@@ -206,7 +206,9 @@ export const MainScreenComponent = () => {
       const next = !prev;
       try {
         localStorage.setItem('tracebull-sidebar-collapsed', String(next));
-      } catch {}
+      } catch {
+        // intentionally ignored — localStorage write failure is non-critical
+      }
       return next;
     });
   };

@@ -169,7 +169,9 @@ export const QueryResultsComponent = ({
     }
     try {
       localStorage.setItem(GROUP_SIMILAR_KEY, String(enabled));
-    } catch {}
+    } catch {
+      // intentionally ignored — localStorage write failure is non-critical
+    }
   };
 
   const patternGroups = useMemo(() => {
