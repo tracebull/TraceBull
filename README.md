@@ -18,13 +18,16 @@
 
 - **Easy Deployment** — Single `docker compose up -d`, everything included
 - **Powerful Log Search** — Filter by fields, operators, and time ranges with a visual query builder
+- **Log Pattern Detection** — Auto-group similar log entries to reduce noise and spot recurring issues
 - **Multi-Project** — Isolated log spaces per project with separate API keys
-- **Multi-User** — Role-based access control (Admin / Member) with project-level permissions
+- **Multi-User** — Role-based access control (Admin / Manager / User) with project-level permissions (Owner / Admin / Member)
+- **User Management** — Admins can create users directly or invite via email, assign system roles, and bulk-add users to projects
 - **Multi-Language** — Send logs from Python, Go, Java, Node.js and more via HTTP API
 - **Realtime Streaming** — Live log tail with SSE, no polling
 - **API Keys & Security** — Per-project keys with optional domain and IP restrictions
 - **Audit Logging** — Complete trail of all user and admin actions
-- **OAuth Support** — GitHub and Google login (optional, cloud mode)
+- **Collapsible Sidebar** — Icon-only or expanded mode with tooltips, persisted per browser
+- **OAuth Support** — GitHub, Google, and Microsoft login (optional, cloud mode)
 - **Modern UI** — React 19 + shadcn/ui with light/dark theme, built with Tailwind CSS 4
 
 ---
