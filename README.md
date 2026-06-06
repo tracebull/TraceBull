@@ -7,6 +7,7 @@
 
   Self-hosted · Modern UI · Multi-project · Role-based access
 
+  [![Website](https://img.shields.io/badge/website-tracebull.github.io-emerald)](https://tracebull.github.io)
   [![CI](https://github.com/tracebull/TraceBull/actions/workflows/ci-release.yml/badge.svg)](https://github.com/tracebull/TraceBull/actions/workflows/ci-release.yml)
   [![Docker Image](https://ghcr-badge.egpl.dev/tracebull/tracebull/latest_tag?trim=major&label=ghcr.io)](https://github.com/tracebull/TraceBull/pkgs/container/tracebull)
   [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
