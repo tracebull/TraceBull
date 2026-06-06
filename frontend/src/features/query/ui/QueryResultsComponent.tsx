@@ -32,10 +32,7 @@ const normalizeToPattern = (message: string): string => {
   return (
     message
       // UUIDs: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-      .replace(
-        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
-        '{uuid}',
-      )
+      .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '{uuid}')
       // IP addresses
       .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '{ip}')
       // Email-like patterns
@@ -206,8 +203,7 @@ export const QueryResultsComponent = ({
     }
 
     const entries: Array<
-      | { type: 'single'; log: LogItem }
-      | { type: 'group'; group: PatternGroup }
+      { type: 'single'; log: LogItem } | { type: 'group'; group: PatternGroup }
     > = [];
 
     for (const group of patternGroups) {
@@ -262,7 +258,8 @@ export const QueryResultsComponent = ({
         'bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-800/30 dark:text-gray-400 dark:border-gray-700',
       TRACE:
         'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800',
-      FATAL: 'bg-red-600 text-white border-red-700 dark:bg-red-700 dark:text-white dark:border-red-800',
+      FATAL:
+        'bg-red-600 text-white border-red-700 dark:bg-red-700 dark:text-white dark:border-red-800',
       CRITICAL:
         'bg-red-500 text-white border-red-600 dark:bg-red-800 dark:text-white dark:border-red-900',
     };
@@ -505,7 +502,11 @@ export const QueryResultsComponent = ({
                 <Spinner size="sm" />
               ) : (
                 <>
-                  {queryResults.length.toLocaleString()}${totalResults > queryResults.length ? `+ of ${totalResults.toLocaleString()}` : ''} results${queryResults.length > 0 ? ' loaded' : ' found'}
+                  {queryResults.length.toLocaleString()}$
+                  {totalResults > queryResults.length
+                    ? `+ of ${totalResults.toLocaleString()}`
+                    : ''}{' '}
+                  results${queryResults.length > 0 ? ' loaded' : ' found'}
                   {groupSimilar && patternGroups && patternGroups.length < queryResults.length && (
                     <span className="text-muted-foreground/60 ml-1">
                       ({patternGroups.length} patterns)
@@ -604,7 +605,9 @@ export const QueryResultsComponent = ({
 
                     <div className="w-[140px] shrink-0 !font-mono text-xs break-all">
                       {getServiceName(group.representative) ? (
-                        <span className="text-foreground">{getServiceName(group.representative)}</span>
+                        <span className="text-foreground">
+                          {getServiceName(group.representative)}
+                        </span>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
@@ -638,9 +641,10 @@ export const QueryResultsComponent = ({
                         e.stopPropagation();
                         const allText = group.allLogs
                           .map((log) => {
-                            const fieldsStr = log.fields && Object.keys(log.fields).length > 0
-                              ? '\n' + JSON.stringify(log.fields, null, 2)
-                              : '';
+                            const fieldsStr =
+                              log.fields && Object.keys(log.fields).length > 0
+                                ? '\n' + JSON.stringify(log.fields, null, 2)
+                                : '';
                             return `[${dayjs(log.timestamp).format(timeFormat.format)}] [${log.level}] ${log.message}${fieldsStr}`;
                           })
                           .join('\n');
@@ -733,7 +737,10 @@ const LogRow = React.memo(function LogRow({
     >
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="text-muted-foreground w-[140px] shrink-0 text-xs" style={{ lineHeight: 1.1 }}>
+          <div
+            className="text-muted-foreground w-[140px] shrink-0 text-xs"
+            style={{ lineHeight: 1.1 }}
+          >
             <div className="!font-mono text-[12px]">
               {dayjs(log.timestamp).format(timeFormat.format)}
             </div>

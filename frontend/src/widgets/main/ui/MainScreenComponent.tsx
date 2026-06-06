@@ -485,7 +485,7 @@ export const MainScreenComponent = () => {
               <div className="mt-auto flex flex-col items-center gap-1 pb-1">
                 <button
                   onClick={toggleSidebar}
-                  className="text-muted-foreground hover:text-foreground flex h-7 w-7 cursor-pointer items-center justify-center rounded transition-colors hover:bg-accent"
+                  className="text-muted-foreground hover:text-foreground hover:bg-accent flex h-7 w-7 cursor-pointer items-center justify-center rounded transition-colors"
                 >
                   {sidebarCollapsed ? (
                     <ChevronRight className="size-4" />
@@ -493,9 +493,7 @@ export const MainScreenComponent = () => {
                     <ChevronLeft className="size-4" />
                   )}
                 </button>
-                <div className="text-muted-foreground text-center text-xs">
-                  v{APP_VERSION}
-                </div>
+                <div className="text-muted-foreground text-center text-xs">v{APP_VERSION}</div>
               </div>
             </div>
           )}

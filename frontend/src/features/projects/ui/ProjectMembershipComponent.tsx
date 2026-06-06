@@ -202,7 +202,9 @@ export function ProjectMembershipComponent({ projectResponse, user }: Props) {
       loadMembers();
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? StringUtils.capitalizeFirstLetter(error.message) : 'Failed to add users';
+        error instanceof Error
+          ? StringUtils.capitalizeFirstLetter(error.message)
+          : 'Failed to add users';
       toastMessage.error(errorMessage);
     } finally {
       setIsBulkAdding(false);
@@ -408,7 +410,10 @@ export function ProjectMembershipComponent({ projectResponse, user }: Props) {
                         Add Users
                       </Button>
                     )}
-                    <Button onClick={() => setIsAddMemberModalOpen(true)} disabled={isLoadingMembers}>
+                    <Button
+                      onClick={() => setIsAddMemberModalOpen(true)}
+                      disabled={isLoadingMembers}
+                    >
                       <Plus className="mr-2 size-4" />
                       Add member
                     </Button>
@@ -869,7 +874,10 @@ export function ProjectMembershipComponent({ projectResponse, user }: Props) {
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm">Role:</span>
-                    <Select value={bulkAddRole} onValueChange={(v) => setBulkAddRole(v as ProjectRole)}>
+                    <Select
+                      value={bulkAddRole}
+                      onValueChange={(v) => setBulkAddRole(v as ProjectRole)}
+                    >
                       <SelectTrigger className="h-8 w-32">
                         <SelectValue />
                       </SelectTrigger>
@@ -897,10 +905,7 @@ export function ProjectMembershipComponent({ projectResponse, user }: Props) {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleBulkAdd}
-              disabled={isBulkAdding || selectedUserIds.size === 0}
-            >
+            <Button onClick={handleBulkAdd} disabled={isBulkAdding || selectedUserIds.size === 0}>
               {isBulkAdding ? (
                 <>
                   <Spinner size="sm" className="mr-2" />

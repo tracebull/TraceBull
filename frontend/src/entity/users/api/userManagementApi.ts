@@ -11,10 +11,7 @@ export const userManagementApi = {
   async createUser(request: CreateUserRequest): Promise<UserProfile> {
     const requestOptions: RequestOptions = new RequestOptions();
     requestOptions.setBody(JSON.stringify(request));
-    return apiHelper.fetchPostJson(
-      `${getApplicationServer()}/api/v1/users/create`,
-      requestOptions,
-    );
+    return apiHelper.fetchPostJson(`${getApplicationServer()}/api/v1/users/create`, requestOptions);
   },
 
   async getUsers(request?: ListUsersRequest): Promise<ListUsersResponse> {

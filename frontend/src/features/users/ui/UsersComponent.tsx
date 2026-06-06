@@ -2,6 +2,7 @@ import { toastMessage } from '@/shared/lib/toastMessage';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,7 +10,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -28,7 +28,6 @@ import {
 } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -37,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { userManagementApi } from '../../../entity/users/api/userManagementApi';
 import type { ChangeUserRoleRequest } from '../../../entity/users/model/ChangeUserRoleRequest';
@@ -298,16 +298,11 @@ export function UsersComponent({ globalSettings, user }: Props) {
                 globalSettings?.isAllowManagerInvitations !== false) && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => setIsBulkInviteOpen(true)}
-                      disabled={total <= 1}
-                    >
+                    <Button onClick={() => setIsBulkInviteOpen(true)} disabled={total <= 1}>
                       Bulk Invite
                     </Button>
                   </TooltipTrigger>
-                  {total <= 1 && (
-                    <TooltipContent>Create more users first</TooltipContent>
-                  )}
+                  {total <= 1 && <TooltipContent>Create more users first</TooltipContent>}
                 </Tooltip>
               )}
               <div className="text-muted-foreground text-sm">
@@ -498,7 +493,13 @@ export function UsersComponent({ globalSettings, user }: Props) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsAddUserOpen(false); resetAddUserForm(); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAddUserOpen(false);
+                resetAddUserForm();
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleCreateUser} disabled={isCreatingUser}>
