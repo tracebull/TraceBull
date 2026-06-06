@@ -2,8 +2,16 @@ import { toastMessage } from '@/shared/lib/toastMessage';
 import dayjs from 'dayjs';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -20,6 +28,7 @@ import {
 } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Table,
   TableBody,
@@ -31,6 +40,7 @@ import {
 
 import { userManagementApi } from '../../../entity/users/api/userManagementApi';
 import type { ChangeUserRoleRequest } from '../../../entity/users/model/ChangeUserRoleRequest';
+import type { CreateUserRequest } from '../../../entity/users/model/CreateUserRequest';
 import type { ListUsersRequest } from '../../../entity/users/model/ListUsersRequest';
 import type { UserProfile } from '../../../entity/users/model/UserProfile';
 import { UserRole } from '../../../entity/users/model/UserRole';
@@ -74,6 +84,12 @@ export function UsersComponent({ globalSettings, user }: Props) {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isBulkInviteOpen, setIsBulkInviteOpen] = useState(false);
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [addUserName, setAddUserName] = useState('');
+  const [addUserEmail, setAddUserEmail] = useState('');
+  const [addUserPassword, setAddUserPassword] = useState('');
+  const [addUserRole, setAddUserRole] = useState<UserRole>(UserRole.USER);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
@@ -231,8 +247,42 @@ export function UsersComponent({ globalSettings, user }: Props) {
   };
 
   const handleDrawerClose = () => {
-    setIsDrawerOpen(false);
     setSelectedUser(null);
+    setIsDrawerOpen(false);
+  };
+
+  const resetAddUserForm = () => {
+    setAddUserName('');
+    setAddUserEmail('');
+    setAddUserPassword('');
+    setAddUserRole(UserRole.USER);
+    setIsCreatingUser(false);
+  };
+
+  const handleCreateUser = async () => {
+    if (!addUserName.trim() || !addUserEmail.trim() || !addUserPassword.trim()) {
+      toastMessage.error('Please fill in all fields');
+      return;
+    }
+
+    setIsCreatingUser(true);
+    try {
+      const request: CreateUserRequest = {
+        name: addUserName.trim(),
+        email: addUserEmail.trim().toLowerCase(),
+        password: addUserPassword,
+        role: addUserRole,
+      };
+      await userManagementApi.createUser(request);
+      toastMessage.success('User created successfully');
+      setIsAddUserOpen(false);
+      resetAddUserForm();
+      loadUsers(true);
+    } catch (error: any) {
+      toastMessage.error(error?.message || 'Failed to create user');
+    } finally {
+      setIsCreatingUser(false);
+    }
   };
 
   return (
@@ -241,9 +291,24 @@ export function UsersComponent({ globalSettings, user }: Props) {
         <div ref={scrollContainerRef} className="h-full overflow-y-auto p-6">
           <div className="mb-4 flex items-center justify-end">
             <div className="flex items-center gap-3">
+              {user?.role === UserRole.ADMIN && (
+                <Button onClick={() => setIsAddUserOpen(true)}>Add User</Button>
+              )}
               {(user?.role === UserRole.ADMIN ||
                 globalSettings?.isAllowManagerInvitations !== false) && (
-                <Button onClick={() => setIsBulkInviteOpen(true)}>Bulk Invite</Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={() => setIsBulkInviteOpen(true)}
+                      disabled={total <= 1}
+                    >
+                      Bulk Invite
+                    </Button>
+                  </TooltipTrigger>
+                  {total <= 1 && (
+                    <TooltipContent>Create more users first</TooltipContent>
+                  )}
+                </Tooltip>
               )}
               <div className="text-muted-foreground text-sm">
                 {isLoading ? 'Loading...' : `${users.length} of ${total} users`}
@@ -271,7 +336,7 @@ export function UsersComponent({ globalSettings, user }: Props) {
                   <TableRow>
                     <TableHead style={{ width: 350 }}>User</TableHead>
                     <TableHead style={{ width: 200 }}>System role</TableHead>
-                    <TableHead style={{ width: 200 }}>Is active?</TableHead>
+                    <TableHead style={{ width: 200 }}>Active</TableHead>
                     <TableHead style={{ width: 300 }}>Created</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
@@ -368,6 +433,87 @@ export function UsersComponent({ globalSettings, user }: Props) {
         onClose={() => setIsBulkInviteOpen(false)}
         onInviteComplete={() => loadUsers(true)}
       />
+
+      <Dialog
+        open={isAddUserOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsAddUserOpen(false);
+            resetAddUserForm();
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="add-user-name">Name</Label>
+              <Input
+                id="add-user-name"
+                placeholder="Enter name"
+                value={addUserName}
+                onChange={(e) => setAddUserName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-user-email">Email</Label>
+              <Input
+                id="add-user-email"
+                type="email"
+                placeholder="Enter email"
+                value={addUserEmail}
+                onChange={(e) => setAddUserEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="add-user-password">Password</Label>
+              <Input
+                id="add-user-password"
+                type="password"
+                placeholder="Minimum 8 characters"
+                value={addUserPassword}
+                onChange={(e) => setAddUserPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Role</Label>
+              <Select value={addUserRole} onValueChange={(v) => setAddUserRole(v as UserRole)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={UserRole.USER}>
+                    <span className={getRoleColor(UserRole.USER)}>User</span>
+                  </SelectItem>
+                  <SelectItem value={UserRole.MANAGER}>
+                    <span className={getRoleColor(UserRole.MANAGER)}>Manager</span>
+                  </SelectItem>
+                  <SelectItem value={UserRole.ADMIN}>
+                    <span className={getRoleColor(UserRole.ADMIN)}>Admin</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setIsAddUserOpen(false); resetAddUserForm(); }}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateUser} disabled={isCreatingUser}>
+              {isCreatingUser ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Creating...
+                </>
+              ) : (
+                'Create User'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

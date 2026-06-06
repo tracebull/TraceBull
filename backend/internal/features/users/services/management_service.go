@@ -11,6 +11,7 @@ import (
 	user_repositories "logbull/internal/features/users/repositories"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserManagementService struct {
@@ -168,4 +169,60 @@ func (s *UserManagementService) CountByPlan(planID uuid.UUID, requester *user_mo
 	}
 
 	return count, nil
+}
+
+func (s *UserManagementService) CreateUser(
+	name string,
+	email string,
+	password string,
+	role user_enums.UserRole,
+	createdBy *user_models.User,
+) (*user_models.User, error) {
+	if !createdBy.CanManageUsers() {
+		return nil, errors.New("insufficient permissions to create users")
+	}
+
+	if !role.IsValid() {
+		return nil, errors.New("invalid user role")
+	}
+
+	if role == user_enums.UserRoleAdmin && createdBy.Email != "admin" {
+		return nil, errors.New("only the root admin user can create admin accounts")
+	}
+
+	existing, err := s.userRepository.GetUserByEmail(email)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check existing user: %w", err)
+	}
+	if existing != nil {
+		return nil, errors.New("user with this email already exists")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("failed to hash password: %w", err)
+	}
+	hashedPasswordStr := string(hashedPassword)
+
+	user := &user_models.User{
+		Name:           name,
+		Email:          email,
+		HashedPassword: &hashedPasswordStr,
+		Role:           role,
+		Status:         user_enums.UserStatusActive,
+	}
+
+	if err := s.userRepository.CreateUser(user); err != nil {
+		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	if s.auditLogWriter != nil {
+		s.auditLogWriter.WriteAuditLog(
+			fmt.Sprintf("User created: %s (%s)", email, role),
+			&createdBy.ID,
+			nil,
+		)
+	}
+
+	return user, nil
 }

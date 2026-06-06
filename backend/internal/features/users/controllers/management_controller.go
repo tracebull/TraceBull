@@ -17,12 +17,67 @@ type ManagementController struct {
 }
 
 func (c *ManagementController) RegisterRoutes(router *gin.RouterGroup) {
+	router.POST("/users/create", user_middleware.RequireRole(user_enums.UserRoleAdmin), c.CreateUser)
 	router.GET("/users", user_middleware.RequireRole(user_enums.UserRoleAdmin), c.GetUsers)
 	router.GET("/users/:id", c.GetUserProfile)
 	router.GET("/users/count-by-plan/:planId", user_middleware.RequireRole(user_enums.UserRoleAdmin), c.CountByPlan)
 	router.POST("/users/:id/deactivate", user_middleware.RequireRole(user_enums.UserRoleAdmin), c.DeactivateUser)
 	router.POST("/users/:id/activate", user_middleware.RequireRole(user_enums.UserRoleAdmin), c.ActivateUser)
 	router.PUT("/users/:id/role", user_middleware.RequireRole(user_enums.UserRoleAdmin), c.ChangeUserRole)
+}
+
+// CreateUser
+// @Summary Create a new user
+// @Description Create a new user with name, email, password, and role (admin only)
+// @Tags user-management
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body users_dto.CreateUserRequestDTO true "User creation data"
+// @Success 200 {object} users_dto.UserProfileResponseDTO
+// @Failure 400 {object} map[string]string "Bad request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 403 {object} map[string]string "Forbidden"
+// @Router /users/create [post]
+func (c *ManagementController) CreateUser(ctx *gin.Context) {
+	currentUser, ok := user_middleware.GetUserFromContext(ctx)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	var request user_dto.CreateUserRequestDTO
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	user, err := c.managementService.CreateUser(
+		request.Name,
+		request.Email,
+		request.Password,
+		request.Role,
+		currentUser,
+	)
+	if err != nil {
+		if err.Error() == "insufficient permissions to create users" {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	response := user_dto.UserProfileResponseDTO{
+		ID:        user.ID,
+		Email:     user.Email,
+		Name:      user.Name,
+		Role:      user.Role,
+		IsActive:  user.IsActiveUser(),
+		CreatedAt: user.CreatedAt,
+	}
+
+	ctx.JSON(http.StatusOK, response)
 }
 
 // ListUsers

@@ -2,11 +2,21 @@ import { getApplicationServer } from '../../../constants';
 import RequestOptions from '../../../shared/api/RequestOptions';
 import { apiHelper } from '../../../shared/api/apiHelper';
 import type { ChangeUserRoleRequest } from '../model/ChangeUserRoleRequest';
+import type { CreateUserRequest } from '../model/CreateUserRequest';
 import type { ListUsersRequest } from '../model/ListUsersRequest';
 import type { ListUsersResponse } from '../model/ListUsersResponse';
 import type { UserProfile } from '../model/UserProfile';
 
 export const userManagementApi = {
+  async createUser(request: CreateUserRequest): Promise<UserProfile> {
+    const requestOptions: RequestOptions = new RequestOptions();
+    requestOptions.setBody(JSON.stringify(request));
+    return apiHelper.fetchPostJson(
+      `${getApplicationServer()}/api/v1/users/create`,
+      requestOptions,
+    );
+  },
+
   async getUsers(request?: ListUsersRequest): Promise<ListUsersResponse> {
     const requestOptions: RequestOptions = new RequestOptions();
 
