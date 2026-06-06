@@ -14,3 +14,5 @@ export type { ChangeMemberRoleRequest } from './model/ChangeMemberRoleRequest';
 export type { TransferOwnershipRequest } from './model/TransferOwnershipRequest';
 export type { ProjectMemberResponse } from './model/ProjectMemberResponse';
 export type { GetMembersResponse } from './model/GetMembersResponse';
+export type { BulkAddMembersRequest } from './model/BulkAddMembersRequest';
+export type { BulkAddMembersResponse } from './model/BulkAddMembersResponse';

@@ -136,6 +136,72 @@ func (s *MembershipService) AddMember(
 	}, nil
 }
 
+func (s *MembershipService) BulkAddMembers(
+	projectID uuid.UUID,
+	request *projects_dto.BulkAddMembersRequestDTO,
+	addedBy *users_models.User,
+) (*projects_dto.BulkAddMembersResponseDTO, error) {
+	if err := s.validateCanManageMembership(projectID, addedBy, request.Role); err != nil {
+		return nil, err
+	}
+
+	if !request.Role.IsValid() {
+		return nil, errors.New("invalid role")
+	}
+
+	results := make([]projects_dto.BulkAddMembersResultDTO, 0, len(request.UserIDs))
+
+	for _, userID := range request.UserIDs {
+		targetUser, err := s.userService.GetUserByID(userID)
+		if err != nil || targetUser == nil {
+			results = append(results, projects_dto.BulkAddMembersResultDTO{
+				UserID: userID,
+				Status: "NOT_FOUND",
+			})
+			continue
+		}
+
+		existingMembership, _ := s.membershipRepository.GetMembershipByUserAndProject(userID, projectID)
+		if existingMembership != nil {
+			results = append(results, projects_dto.BulkAddMembersResultDTO{
+				UserID: userID,
+				Email:  targetUser.Email,
+				Status: "ALREADY_MEMBER",
+			})
+			continue
+		}
+
+		membership := &projects_models.ProjectMembership{
+			UserID:    userID,
+			ProjectID: projectID,
+			Role:      request.Role,
+		}
+
+		if err := s.membershipRepository.CreateMembership(membership); err != nil {
+			results = append(results, projects_dto.BulkAddMembersResultDTO{
+				UserID: userID,
+				Email:  targetUser.Email,
+				Status: "ERROR",
+			})
+			continue
+		}
+
+		results = append(results, projects_dto.BulkAddMembersResultDTO{
+			UserID: userID,
+			Email:  targetUser.Email,
+			Status: "ADDED",
+		})
+
+		s.auditLogService.WriteAuditLog(
+			fmt.Sprintf("User added to project: %s as %s", targetUser.Email, request.Role),
+			&addedBy.ID,
+			&projectID,
+		)
+	}
+
+	return &projects_dto.BulkAddMembersResponseDTO{Results: results}, nil
+}
+
 func (s *MembershipService) ChangeMemberRole(
 	projectID uuid.UUID,
 	memberUserID uuid.UUID,

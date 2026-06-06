@@ -44,6 +44,21 @@ type AddMemberResponseDTO struct {
 	Status AddMemberStatus `json:"status"`
 }
 
+type BulkAddMembersRequestDTO struct {
+	UserIDs []uuid.UUID             `json:"userIds" binding:"required,min=1"`
+	Role    users_enums.ProjectRole `json:"role"    binding:"required"`
+}
+
+type BulkAddMembersResultDTO struct {
+	UserID uuid.UUID `json:"userId"`
+	Email  string    `json:"email"`
+	Status string    `json:"status"`
+}
+
+type BulkAddMembersResponseDTO struct {
+	Results []BulkAddMembersResultDTO `json:"results"`
+}
+
 type ChangeMemberRoleRequestDTO struct {
 	Role users_enums.ProjectRole `json:"role" binding:"required"`
 }

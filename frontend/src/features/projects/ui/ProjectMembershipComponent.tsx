@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type {
   AddMemberRequest,
   AddMemberResponse,
+  BulkAddMembersRequest,
+  BulkAddMembersResponse,
   ChangeMemberRoleRequest,
   GetMembersResponse,
   ProjectMemberResponse,
@@ -90,6 +93,12 @@ export function ProjectMembershipComponent({ projectResponse, user }: Props) {
   const [userSearchResults, setUserSearchResults] = useState<UserProfile[]>([]);
   const [isSearchingUsers, setIsSearchingUsers] = useState(false);
   const [searchInputValue, setSearchInputValue] = useState('');
+
+  const [isBulkAddOpen, setIsBulkAddOpen] = useState(false);
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [bulkAddRole, setBulkAddRole] = useState<ProjectRole>(ProjectRole.MEMBER);
+  const [isBulkAdding, setIsBulkAdding] = useState(false);
 
   const canManageMembers =
     user.role === UserRole.ADMIN ||
@@ -147,6 +156,56 @@ export function ProjectMembershipComponent({ projectResponse, user }: Props) {
       setUserSearchResults([]);
     } finally {
       setIsSearchingUsers(false);
+    }
+  };
+
+  const openBulkAddDialog = async () => {
+    setIsBulkAddOpen(true);
+    setSelectedUserIds(new Set());
+    setBulkAddRole(ProjectRole.MEMBER);
+    try {
+      const response = await userManagementApi.getUsers({ limit: 100 });
+      const activeUsers = response.users.filter((u) => u.isActive);
+      const memberIds = new Set(members.map((m) => m.userId));
+      const nonMembers = activeUsers.filter((u) => !memberIds.has(u.id));
+      setAllUsers(nonMembers);
+    } catch {
+      toastMessage.error('Failed to load users');
+    }
+  };
+
+  const handleBulkAdd = async () => {
+    if (selectedUserIds.size === 0) {
+      toastMessage.error('Select at least one user');
+      return;
+    }
+
+    setIsBulkAdding(true);
+    try {
+      const request: BulkAddMembersRequest = {
+        userIds: Array.from(selectedUserIds),
+        role: bulkAddRole,
+      };
+      const response: BulkAddMembersResponse = await projectMembershipApi.bulkAddMembers(
+        projectResponse.id,
+        request,
+      );
+      const added = response.results.filter((r) => r.status === 'ADDED').length;
+      const skipped = response.results.filter((r) => r.status !== 'ADDED').length;
+
+      let msg = `${added} user${added !== 1 ? 's' : ''} added`;
+      if (skipped > 0) msg += ` (${skipped} skipped)`;
+      toastMessage.success(msg);
+
+      setIsBulkAddOpen(false);
+      setSelectedUserIds(new Set());
+      loadMembers();
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? StringUtils.capitalizeFirstLetter(error.message) : 'Failed to add users';
+      toastMessage.error(errorMessage);
+    } finally {
+      setIsBulkAdding(false);
     }
   };
 
@@ -338,10 +397,22 @@ export function ProjectMembershipComponent({ projectResponse, user }: Props) {
                   </Button>
                 )}
                 {canManageMembers && (
-                  <Button onClick={() => setIsAddMemberModalOpen(true)} disabled={isLoadingMembers}>
-                    <Plus className="mr-2 size-4" />
-                    Add member
-                  </Button>
+                  <div className="flex gap-2">
+                    {user.role === UserRole.ADMIN && (
+                      <Button
+                        variant="outline"
+                        onClick={openBulkAddDialog}
+                        disabled={isLoadingMembers}
+                      >
+                        <UserPlus className="mr-2 size-4" />
+                        Add Users
+                      </Button>
+                    )}
+                    <Button onClick={() => setIsAddMemberModalOpen(true)} disabled={isLoadingMembers}>
+                      <Plus className="mr-2 size-4" />
+                      Add member
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -743,6 +814,105 @@ export function ProjectMembershipComponent({ projectResponse, user }: Props) {
           </div>
         </div>
       </div>
+
+      <Dialog
+        open={isBulkAddOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsBulkAddOpen(false);
+            setSelectedUserIds(new Set());
+            setAllUsers([]);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Users to Project</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {allUsers.length === 0 ? (
+              <div className="text-muted-foreground py-4 text-center text-sm">
+                No available users to add
+              </div>
+            ) : (
+              <>
+                <div className="max-h-[300px] space-y-2 overflow-y-auto">
+                  {allUsers.map((u) => (
+                    <label
+                      key={u.id}
+                      className="hover:bg-accent flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5"
+                    >
+                      <Checkbox
+                        checked={selectedUserIds.has(u.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedUserIds((prev) => {
+                            const next = new Set(prev);
+                            if (checked) {
+                              next.add(u.id);
+                            } else {
+                              next.delete(u.id);
+                            }
+                            return next;
+                          });
+                        }}
+                      />
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">{u.name}</div>
+                        <div className="text-muted-foreground text-xs">{u.email}</div>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {u.role}
+                      </Badge>
+                    </label>
+                  ))}
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">Role:</span>
+                    <Select value={bulkAddRole} onValueChange={(v) => setBulkAddRole(v as ProjectRole)}>
+                      <SelectTrigger className="h-8 w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={ProjectRole.MEMBER}>Member</SelectItem>
+                        <SelectItem value={ProjectRole.ADMIN}>Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="text-muted-foreground ml-auto text-xs">
+                    {selectedUserIds.size} selected
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsBulkAddOpen(false);
+                setSelectedUserIds(new Set());
+                setAllUsers([]);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleBulkAdd}
+              disabled={isBulkAdding || selectedUserIds.size === 0}
+            >
+              {isBulkAdding ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Adding...
+                </>
+              ) : (
+                `Add ${selectedUserIds.size || ''} User${selectedUserIds.size !== 1 ? 's' : ''}`
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

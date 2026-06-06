@@ -3,6 +3,8 @@ import RequestOptions from '../../../shared/api/RequestOptions';
 import { apiHelper } from '../../../shared/api/apiHelper';
 import type { AddMemberRequest } from '../model/AddMemberRequest';
 import type { AddMemberResponse } from '../model/AddMemberResponse';
+import type { BulkAddMembersRequest } from '../model/BulkAddMembersRequest';
+import type { BulkAddMembersResponse } from '../model/BulkAddMembersResponse';
 import type { ChangeMemberRoleRequest } from '../model/ChangeMemberRoleRequest';
 import type { GetMembersResponse } from '../model/GetMembersResponse';
 import type { TransferOwnershipRequest } from '../model/TransferOwnershipRequest';
@@ -21,6 +23,18 @@ export const projectMembershipApi = {
     requestOptions.setBody(JSON.stringify(request));
     return apiHelper.fetchPostJson(
       `${getApplicationServer()}/api/v1/projects/memberships/${projectId}/members`,
+      requestOptions,
+    );
+  },
+
+  async bulkAddMembers(
+    projectId: string,
+    request: BulkAddMembersRequest,
+  ): Promise<BulkAddMembersResponse> {
+    const requestOptions: RequestOptions = new RequestOptions();
+    requestOptions.setBody(JSON.stringify(request));
+    return apiHelper.fetchPostJson(
+      `${getApplicationServer()}/api/v1/projects/memberships/${projectId}/members/bulk`,
       requestOptions,
     );
   },

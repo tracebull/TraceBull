@@ -20,6 +20,7 @@ func (c *MembershipController) RegisterRoutes(router *gin.RouterGroup) {
 
 	projectRoutes.GET("/members", c.ListMembers)
 	projectRoutes.POST("/members", c.AddMember)
+	projectRoutes.POST("/members/bulk", c.BulkAddMembers)
 	projectRoutes.PUT("/members/:userId/role", c.ChangeMemberRole)
 	projectRoutes.DELETE("/members/:userId", c.RemoveMember)
 	projectRoutes.POST("/transfer-ownership", c.TransferOwnership)
@@ -104,6 +105,53 @@ func (c *MembershipController) AddMember(ctx *gin.Context) {
 	}
 
 	response, err := c.membershipService.AddMember(projectID, &request, user)
+	if err != nil {
+		if err.Error() == "insufficient permissions to manage members" {
+			ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response)
+}
+
+// BulkAddMembers
+// @Summary Bulk add members to project
+// @Description Add multiple existing users to the project at once
+// @Tags project-membership
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Project ID"
+// @Param request body projects_dto.BulkAddMembersRequestDTO true "Bulk member addition data"
+// @Success 200 {object} projects_dto.BulkAddMembersResponseDTO
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 403 {object} map[string]string
+// @Router /projects/memberships/{id}/members/bulk [post]
+func (c *MembershipController) BulkAddMembers(ctx *gin.Context) {
+	user, ok := users_middleware.GetUserFromContext(ctx)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	projectIDStr := ctx.Param("id")
+	projectID, err := uuid.Parse(projectIDStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project ID"})
+		return
+	}
+
+	var request projects_dto.BulkAddMembersRequestDTO
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	response, err := c.membershipService.BulkAddMembers(projectID, &request, user)
 	if err != nil {
 		if err.Error() == "insufficient permissions to manage members" {
 			ctx.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
