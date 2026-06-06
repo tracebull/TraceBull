@@ -1,4 +1,16 @@
-import { Code, FolderCog, Key, Menu, Search, Settings, User, UserCog, Users } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Code,
+  FolderCog,
+  Key,
+  Menu,
+  Search,
+  Settings,
+  User,
+  UserCog,
+  Users,
+} from 'lucide-react';
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -104,6 +116,13 @@ export const MainScreenComponent = () => {
 
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 450);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('tracebull-sidebar-collapsed') !== 'false';
+    } catch {
+      return true;
+    }
+  });
 
   const loadData = async () => {
     setIsLoading(true);
@@ -180,6 +199,16 @@ export const MainScreenComponent = () => {
   const handleNavClick = (tab: TabId) => {
     setSelectedTab(tab);
     setSheetOpen(false);
+  };
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('tracebull-sidebar-collapsed', String(next));
+      } catch {}
+      return next;
+    });
   };
 
   const handleProjectUpdated = (updatedProject: ProjectResponse) => {
@@ -405,34 +434,68 @@ export const MainScreenComponent = () => {
 
         <div className="flex flex-1 overflow-hidden">
           {!isMobile && (
-            <div className="bg-card flex w-[48px] flex-shrink-0 flex-col items-center rounded py-1.5">
+            <div
+              className={`bg-card flex flex-shrink-0 flex-col rounded py-1.5 transition-all duration-200 ${
+                sidebarCollapsed ? 'w-[48px] items-center' : 'w-[180px] px-2'
+              }`}
+            >
               {navItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <div key={item.tab} className="flex flex-col items-center">
-                    {item.hasSeparator && <div className="bg-border mb-2 h-px w-6" />}
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div
-                          className={`flex h-[36px] w-[36px] cursor-pointer items-center justify-center rounded ${
-                            selectedTab === item.tab
-                              ? 'bg-primary text-primary-foreground'
-                              : 'hover:bg-accent'
-                          }`}
-                          onClick={() => handleNavClick(item.tab)}
-                        >
-                          <Icon className="size-4" />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" sideOffset={8}>
-                        {item.label}
-                      </TooltipContent>
-                    </Tooltip>
+                    {item.hasSeparator && (
+                      <div
+                        className={`bg-border mb-2 h-px ${sidebarCollapsed ? 'w-6' : 'w-full'}`}
+                      />
+                    )}
+                    {sidebarCollapsed ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`flex h-[36px] w-[36px] cursor-pointer items-center justify-center rounded ${
+                              selectedTab === item.tab
+                                ? 'bg-primary text-primary-foreground'
+                                : 'hover:bg-accent'
+                            }`}
+                            onClick={() => handleNavClick(item.tab)}
+                          >
+                            <Icon className="size-4" />
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" sideOffset={8}>
+                          {item.label}
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <div
+                        className={`flex h-[36px] w-full cursor-pointer items-center gap-2.5 rounded px-2 ${
+                          selectedTab === item.tab
+                            ? 'bg-primary text-primary-foreground'
+                            : 'hover:bg-accent'
+                        }`}
+                        onClick={() => handleNavClick(item.tab)}
+                      >
+                        <Icon className="size-4 shrink-0" />
+                        <span className="truncate text-sm">{item.label}</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}
-              <div className="text-muted-foreground mt-auto px-2 pb-2 text-center text-xs">
-                v{APP_VERSION}
+              <div className="mt-auto flex flex-col items-center gap-1 pb-1">
+                <button
+                  onClick={toggleSidebar}
+                  className="text-muted-foreground hover:text-foreground flex h-7 w-7 cursor-pointer items-center justify-center rounded transition-colors hover:bg-accent"
+                >
+                  {sidebarCollapsed ? (
+                    <ChevronRight className="size-4" />
+                  ) : (
+                    <ChevronLeft className="size-4" />
+                  )}
+                </button>
+                <div className="text-muted-foreground text-center text-xs">
+                  v{APP_VERSION}
+                </div>
               </div>
             </div>
           )}
