@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { Copy } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
@@ -15,11 +16,58 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 import { type LogItem } from '../../../entity/query';
 import { getUserTimeFormatWithMs } from '../../../shared/time';
 
 const STORAGE_KEY = 'tracebull-message-length';
+const GROUP_SIMILAR_KEY = 'tracebull-group-similar';
+
+/**
+ * Normalize a log message into a pattern key by replacing variable parts.
+ * Numbers, UUIDs, IPs, emails, and file paths are replaced with placeholders.
+ */
+const normalizeToPattern = (message: string): string => {
+  return (
+    message
+      // UUIDs: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      .replace(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+        '{uuid}',
+      )
+      // IP addresses
+      .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '{ip}')
+      // Email-like patterns
+      .replace(/[\w.-]+@[\w.-]+\.\w+/g, '{email}')
+      // File paths (Unix)
+      .replace(/(?:\/[\w.-]+){2,}/g, '{path}')
+      // Hex sequences (8+ chars)
+      .replace(/\b[0-9a-f]{8,}\b/gi, '{hex}')
+      // Numbers (including decimals)
+      .replace(/\b\d+(?:\.\d+)?\b/g, '#')
+      // Normalize whitespace
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase()
+  );
+};
+
+interface PatternGroup {
+  patternKey: string;
+  level: string;
+  representative: LogItem;
+  allLogs: LogItem[];
+}
+
+const getStoredGroupSimilar = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  try {
+    return localStorage.getItem(GROUP_SIMILAR_KEY) === 'true';
+  } catch {
+    return false;
+  }
+};
 const SERVICE_FIELD_NAMES = [
   'service',
   'service_name',
@@ -109,11 +157,69 @@ export const QueryResultsComponent = ({
 }: Props): React.JSX.Element | null => {
   // States
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [messageLength, setMessageLength] = useState<number>(getStoredMessageLength());
   const [showFields, setShowFields] = useState<boolean>(true);
+  const [groupSimilar, setGroupSimilar] = useState<boolean>(getStoredGroupSimilar());
 
   // Get user's time format preference with milliseconds
   const timeFormat = useMemo(() => getUserTimeFormatWithMs(), []);
+
+  const toggleGroupSimilar = (enabled: boolean) => {
+    setGroupSimilar(enabled);
+    if (!enabled) {
+      setExpandedGroups(new Set());
+    }
+    try {
+      localStorage.setItem(GROUP_SIMILAR_KEY, String(enabled));
+    } catch {}
+  };
+
+  const patternGroups = useMemo(() => {
+    if (!groupSimilar || queryResults.length === 0) return null;
+
+    const groupMap = new Map<string, PatternGroup>();
+    const groupOrder: string[] = [];
+
+    for (const log of queryResults) {
+      const patternKey = `${log.level}::${normalizeToPattern(log.message)}`;
+      const existing = groupMap.get(patternKey);
+      if (existing) {
+        existing.allLogs.push(log);
+      } else {
+        groupMap.set(patternKey, {
+          patternKey,
+          level: log.level,
+          representative: log,
+          allLogs: [log],
+        });
+        groupOrder.push(patternKey);
+      }
+    }
+
+    return groupOrder.map((key) => groupMap.get(key)!);
+  }, [queryResults, groupSimilar]);
+
+  const displayEntries = useMemo(() => {
+    if (!patternGroups) {
+      return queryResults.map((log) => ({ type: 'single' as const, log }));
+    }
+
+    const entries: Array<
+      | { type: 'single'; log: LogItem }
+      | { type: 'group'; group: PatternGroup }
+    > = [];
+
+    for (const group of patternGroups) {
+      if (group.allLogs.length === 1) {
+        entries.push({ type: 'single', log: group.representative });
+      } else {
+        entries.push({ type: 'group', group });
+      }
+    }
+
+    return entries;
+  }, [patternGroups, queryResults]);
 
   // Refs
   const isLoadingMore = useRef(false);
@@ -149,16 +255,16 @@ export const QueryResultsComponent = ({
   const renderLogLevel = (level: string) => {
     const colors = {
       ERROR:
-        'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
-      WARN: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
-      INFO: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
-      DEBUG: 'bg-muted text-foreground border-border',
+        'bg-red-100 text-red-800 border-red-300 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800',
+      WARN: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800',
+      INFO: 'bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+      DEBUG:
+        'bg-gray-100 text-gray-600 border-gray-300 dark:bg-gray-800/30 dark:text-gray-400 dark:border-gray-700',
       TRACE:
         'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800',
-      FATAL:
-        'bg-red-200 text-red-900 border-red-300 dark:bg-red-900/50 dark:text-red-200 dark:border-red-700',
+      FATAL: 'bg-red-600 text-white border-red-700 dark:bg-red-700 dark:text-white dark:border-red-800',
       CRITICAL:
-        'bg-red-200 text-red-900 border-red-300 dark:bg-red-900/50 dark:text-red-200 dark:border-red-700',
+        'bg-red-500 text-white border-red-600 dark:bg-red-800 dark:text-white dark:border-red-900',
     };
 
     const colorClass = colors[level as keyof typeof colors] || colors.INFO;
@@ -381,13 +487,31 @@ export const QueryResultsComponent = ({
                 Show fields
               </label>
             </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="groupSimilar"
+                checked={groupSimilar}
+                onCheckedChange={(checked) => toggleGroupSimilar(checked === true)}
+                className="text-xs"
+              />
+              <label htmlFor="groupSimilar" className="text-muted-foreground text-xs font-normal">
+                Group similar
+              </label>
+            </div>
             <span className="text-muted-foreground text-xs font-normal">
               {isRealtimeStreaming ? (
                 `Live - ${queryResults.length.toLocaleString()} results loaded`
               ) : isExecuting && queryResults.length === 0 ? (
                 <Spinner size="sm" />
               ) : (
-                `${queryResults.length.toLocaleString()}${totalResults > queryResults.length ? `+ of ${totalResults.toLocaleString()}` : ''} results${queryResults.length > 0 ? ' loaded' : ' found'}`
+                <>
+                  {queryResults.length.toLocaleString()}${totalResults > queryResults.length ? `+ of ${totalResults.toLocaleString()}` : ''} results${queryResults.length > 0 ? ' loaded' : ' found'}
+                  {groupSimilar && patternGroups && patternGroups.length < queryResults.length && (
+                    <span className="text-muted-foreground/60 ml-1">
+                      ({patternGroups.length} patterns)
+                    </span>
+                  )}
+                </>
               )}
             </span>
           </div>
@@ -401,8 +525,9 @@ export const QueryResultsComponent = ({
             <span className="ml-2 text-sm">Executing query...</span>
           </div>
         ) : queryResults.length === 0 ? (
-          <div className="text-muted-foreground flex h-20 items-center justify-center text-sm">
-            No logs found matching your query.
+          <div className="text-muted-foreground flex h-24 flex-col items-center justify-center gap-1 text-sm">
+            <span>No logs found matching your query.</span>
+            <span className="text-xs">Try adjusting your filters or time range.</span>
           </div>
         ) : (
           <div className="space-y-1">
@@ -421,59 +546,130 @@ export const QueryResultsComponent = ({
             </div>
 
             {/* Results Rows */}
-            {queryResults.map((log) => {
-              const isExpanded = expandedRows.has(log.id);
-              const serviceName = getServiceName(log);
-              const { text: displayMessage, isTruncated: messageIsTruncated } = isExpanded
-                ? { text: log.message, isTruncated: false }
-                : truncateText(log.message, messageLength);
+            {displayEntries.map((entry) => {
+              if (entry.type === 'single') {
+                const log = entry.log;
+                return (
+                  <LogRow
+                    key={log.id}
+                    log={log}
+                    isExpanded={expandedRows.has(log.id)}
+                    showFields={showFields}
+                    messageLength={messageLength}
+                    timeFormat={timeFormat}
+                    onToggleExpand={() => toggleRowExpansion(log.id)}
+                    renderLogLevel={renderLogLevel}
+                    getServiceName={getServiceName}
+                    renderCustomFields={renderCustomFields}
+                    truncateText={truncateText}
+                  />
+                );
+              }
+
+              const { group } = entry;
+              const isGroupExpanded = expandedGroups.has(group.patternKey);
+              const count = group.allLogs.length;
 
               return (
-                <div
-                  key={log.id}
-                  className="border-border hover:bg-accent flex cursor-pointer items-start gap-2 border-b py-1 !font-mono text-xs"
-                  onClick={() => toggleRowExpansion(log.id)}
-                >
+                <div key={`group-${group.patternKey}`} className="space-y-0">
                   <div
-                    className="text-muted-foreground w-[150px] shrink-0 text-xs"
-                    style={{ lineHeight: 1.1 }}
+                    className="border-border hover:bg-accent group flex cursor-pointer items-start gap-2 border-b py-1 !font-mono text-xs"
+                    onClick={() => {
+                      setExpandedGroups((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(group.patternKey)) {
+                          next.delete(group.patternKey);
+                        } else {
+                          next.add(group.patternKey);
+                        }
+                        return next;
+                      });
+                    }}
                   >
-                    <div className="!font-mono text-[12px]">
-                      {dayjs(log.timestamp).format(timeFormat.format)}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className="text-muted-foreground w-[140px] shrink-0 text-xs"
+                          style={{ lineHeight: 1.1 }}
+                        >
+                          <div className="!font-mono text-[12px]">
+                            {dayjs(group.representative.timestamp).format(timeFormat.format)}
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" sideOffset={4}>
+                        {dayjs(group.representative.timestamp).fromNow()}
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <div className="w-[140px] shrink-0 !font-mono text-xs break-all">
+                      {getServiceName(group.representative) ? (
+                        <span className="text-foreground">{getServiceName(group.representative)}</span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </div>
-                    <div className="text-muted-foreground !font-mono text-[10px]">
-                      {dayjs(log.timestamp).fromNow()}
+
+                    <div className="w-[85px] shrink-0 !font-mono">
+                      {renderLogLevel(group.representative.level)}
                     </div>
-                  </div>
 
-                  <div className="w-[140px] shrink-0 !font-mono text-xs break-all">
-                    {serviceName ? (
-                      <span className="text-foreground">{serviceName}</span>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
+                    <div
+                      className={`${showFields ? 'min-w-0 flex-1' : 'min-w-0 flex-[2]'} text-foreground !font-mono text-xs break-all`}
+                    >
+                      <span>{truncateText(group.representative.message, messageLength).text}</span>
+                      <span className="bg-primary/10 text-primary ml-1.5 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold">
+                        x{count} similar
+                      </span>
+                    </div>
+
+                    {showFields && (
+                      <>
+                        <div className="w-[10px] shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          {renderCustomFields(group.representative, false, messageLength)}
+                        </div>
+                      </>
                     )}
+
+                    <button
+                      className="text-muted-foreground hover:text-foreground mt-0.5 w-[28px] shrink-0 cursor-pointer opacity-0 transition-opacity group-hover:opacity-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const allText = group.allLogs
+                          .map((log) => {
+                            const fieldsStr = log.fields && Object.keys(log.fields).length > 0
+                              ? '\n' + JSON.stringify(log.fields, null, 2)
+                              : '';
+                            return `[${dayjs(log.timestamp).format(timeFormat.format)}] [${log.level}] ${log.message}${fieldsStr}`;
+                          })
+                          .join('\n');
+                        navigator.clipboard.writeText(allText);
+                      }}
+                      title="Copy all similar logs"
+                    >
+                      <Copy className="size-3" />
+                    </button>
                   </div>
 
-                  <div className="w-[85px] shrink-0 !font-mono">{renderLogLevel(log.level)}</div>
-
-                  <div
-                    className={`${showFields ? 'min-w-0 flex-1' : 'min-w-0 flex-[2]'} text-foreground !font-mono text-xs break-all ${
-                      isExpanded && displayMessage.includes(' ') ? 'whitespace-pre-wrap' : ''
-                    }`}
-                  >
-                    {displayMessage}
-                    {messageIsTruncated && !isExpanded && (
-                      <span className="text-primary hover:text-primary/80 ml-1">(expand)</span>
-                    )}
-                  </div>
-
-                  {showFields && (
-                    <>
-                      <div className="w-[10px] shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        {renderCustomFields(log, isExpanded, messageLength)}
-                      </div>
-                    </>
+                  {isGroupExpanded && (
+                    <div className="bg-accent/30">
+                      {group.allLogs.map((log) => (
+                        <LogRow
+                          key={log.id}
+                          log={log}
+                          isExpanded={expandedRows.has(log.id)}
+                          showFields={showFields}
+                          messageLength={messageLength}
+                          timeFormat={timeFormat}
+                          onToggleExpand={() => toggleRowExpansion(log.id)}
+                          renderLogLevel={renderLogLevel}
+                          getServiceName={getServiceName}
+                          renderCustomFields={renderCustomFields}
+                          truncateText={truncateText}
+                        />
+                      ))}
+                    </div>
                   )}
                 </div>
               );
@@ -499,3 +695,99 @@ export const QueryResultsComponent = ({
     </div>
   );
 };
+
+interface LogRowProps {
+  log: LogItem;
+  isExpanded: boolean;
+  showFields: boolean;
+  messageLength: number;
+  timeFormat: { format: string };
+  onToggleExpand: () => void;
+  renderLogLevel: (level: string) => React.JSX.Element;
+  getServiceName: (log: LogItem) => string | undefined;
+  renderCustomFields: (log: LogItem, isExpanded: boolean, maxLength: number) => React.JSX.Element;
+  truncateText: (text: string, maxLength: number) => { text: string; isTruncated: boolean };
+}
+
+const LogRow = React.memo(function LogRow({
+  log,
+  isExpanded,
+  showFields,
+  messageLength,
+  timeFormat,
+  onToggleExpand,
+  renderLogLevel,
+  getServiceName,
+  renderCustomFields,
+  truncateText,
+}: LogRowProps) {
+  const serviceName = getServiceName(log);
+  const { text: displayMessage, isTruncated: messageIsTruncated } = isExpanded
+    ? { text: log.message, isTruncated: false }
+    : truncateText(log.message, messageLength);
+
+  return (
+    <div
+      className="border-border hover:bg-accent group flex cursor-pointer items-start gap-2 border-b py-1 !font-mono text-xs"
+      onClick={onToggleExpand}
+    >
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="text-muted-foreground w-[140px] shrink-0 text-xs" style={{ lineHeight: 1.1 }}>
+            <div className="!font-mono text-[12px]">
+              {dayjs(log.timestamp).format(timeFormat.format)}
+            </div>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" sideOffset={4}>
+          {dayjs(log.timestamp).fromNow()}
+        </TooltipContent>
+      </Tooltip>
+
+      <div className="w-[140px] shrink-0 !font-mono text-xs break-all">
+        {serviceName ? (
+          <span className="text-foreground">{serviceName}</span>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+      </div>
+
+      <div className="w-[85px] shrink-0 !font-mono">{renderLogLevel(log.level)}</div>
+
+      <div
+        className={`${showFields ? 'min-w-0 flex-1' : 'min-w-0 flex-[2]'} text-foreground !font-mono text-xs break-all ${
+          isExpanded && displayMessage.includes(' ') ? 'whitespace-pre-wrap' : ''
+        }`}
+      >
+        {displayMessage}
+        {messageIsTruncated && !isExpanded && (
+          <span className="text-primary hover:text-primary/80 ml-1">(expand)</span>
+        )}
+      </div>
+
+      {showFields && (
+        <>
+          <div className="w-[10px] shrink-0" />
+          <div className="min-w-0 flex-1">{renderCustomFields(log, isExpanded, messageLength)}</div>
+        </>
+      )}
+
+      <button
+        className="text-muted-foreground hover:text-foreground mt-0.5 w-[28px] shrink-0 cursor-pointer opacity-0 transition-opacity group-hover:opacity-100"
+        onClick={(e) => {
+          e.stopPropagation();
+          const fieldsStr =
+            log.fields && Object.keys(log.fields).length > 0
+              ? '\n' + JSON.stringify(log.fields, null, 2)
+              : '';
+          navigator.clipboard.writeText(
+            `[${dayjs(log.timestamp).format(timeFormat.format)}] [${log.level}] ${log.message}${fieldsStr}`,
+          );
+        }}
+        title="Copy log"
+      >
+        <Copy className="size-3" />
+      </button>
+    </div>
+  );
+});
