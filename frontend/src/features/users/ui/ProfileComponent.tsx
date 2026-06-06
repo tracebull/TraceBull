@@ -222,17 +222,22 @@ export function ProfileComponent() {
                     />
 
                     <div className="mt-2 mb-1 text-xs font-semibold">Email</div>
-                    <Input
-                      value={editEmail}
-                      onChange={(e) => {
-                        setEditEmailError(false);
-                        setEditEmail(e.currentTarget.value.trim().toLowerCase());
-                      }}
-                      placeholder="Enter your email"
-                      type="email"
-                      className={`mb-4 ${editEmailError ? 'border-destructive' : ''}`}
-                      disabled={user.email === 'admin'}
-                    />
+                    {user.email === 'admin' ? (
+                      <div className="bg-muted text-muted-foreground mb-4 flex h-9 items-center rounded-md border px-3 text-sm">
+                        {user.email}
+                      </div>
+                    ) : (
+                      <Input
+                        value={editEmail}
+                        onChange={(e) => {
+                          setEditEmailError(false);
+                          setEditEmail(e.currentTarget.value.trim().toLowerCase());
+                        }}
+                        placeholder="Enter your email"
+                        type="email"
+                        className={`mb-4 ${editEmailError ? 'border-destructive' : ''}`}
+                      />
+                    )}
                     {user.email === 'admin' && (
                       <div className="text-muted-foreground mb-4 text-xs">
                         Admin email cannot be changed

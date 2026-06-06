@@ -60,6 +60,7 @@ export function ProjectSettingsComponent({ projectResponse, user, onProjectUpdat
 
   // Delete project dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
 
   // Tags input state for domains and IPs
   const [domainInputValue, setDomainInputValue] = useState('');
@@ -74,6 +75,12 @@ export function ProjectSettingsComponent({ projectResponse, user, onProjectUpdat
     loadProject();
     loadProjectStats();
   }, [projectResponse.id]);
+
+  useEffect(() => {
+    if (!isDeleteDialogOpen) {
+      setDeleteConfirmName('');
+    }
+  }, [isDeleteDialogOpen]);
 
   // Helper functions to check section-specific changes
   const checkBasicInfoChanges = (newFormProject: Partial<Project>): boolean => {
@@ -719,18 +726,6 @@ export function ProjectSettingsComponent({ projectResponse, user, onProjectUpdat
                     Rate limiting & quotas
                   </h2>
 
-                  <div className="text-muted-foreground mt-3 text-sm">
-                    Read more about settings you can{' '}
-                    <a
-                      href="https://logbull.com/settings"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="!text-primary font-bold"
-                    >
-                      here
-                    </a>
-                  </div>
-
                   {project?.plan?.warningText && (
                     <div className="mt-1 text-orange-600 opacity-60">
                       {project.plan.warningText}
@@ -915,12 +910,28 @@ export function ProjectSettingsComponent({ projectResponse, user, onProjectUpdat
                               <strong>This action cannot be undone.</strong> All logs and associated
                               data will be permanently removed.
                             </p>
+                            <div className="mt-4">
+                              <label className="text-sm font-medium">
+                                Type <strong>{project.name}</strong> to confirm:
+                              </label>
+                              <Input
+                                value={deleteConfirmName}
+                                onChange={(e) => setDeleteConfirmName(e.target.value)}
+                                placeholder={project.name}
+                                className="mt-1.5"
+                                autoComplete="off"
+                              />
+                            </div>
                           </div>
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction variant="destructive" onClick={handleDeleteProject}>
+                        <AlertDialogAction
+                          variant="destructive"
+                          onClick={handleDeleteProject}
+                          disabled={deleteConfirmName !== project.name}
+                        >
                           Delete Project
                         </AlertDialogAction>
                       </AlertDialogFooter>

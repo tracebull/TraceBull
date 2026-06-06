@@ -214,13 +214,6 @@ export function SettingsComponent() {
             )}
           </div>
 
-          <div className="text-muted-foreground mt-3 text-sm">
-            Read more about settings you can{' '}
-            <a href="#" target="_blank" rel="noreferrer" className="!text-primary">
-              here
-            </a>
-          </div>
-
           {/* Health-check Information */}
           <div className="my-8 max-w-2xl">
             <h2 className="mb-3 text-base font-medium">Health-check</h2>

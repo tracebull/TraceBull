@@ -1,6 +1,6 @@
 import { toastMessage } from '@/shared/lib/toastMessage';
 import dayjs from 'dayjs';
-import { Copy, Edit, Loader2, Plus, Trash2, TriangleAlert } from 'lucide-react';
+import { Copy, Edit, Info, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import {
@@ -262,21 +262,9 @@ export function ProjectApiKeysComponent({ projectResponse, user }: Props) {
             </div>
 
             {project && !project.isApiKeyRequired && (
-              <div className="mb-6 rounded-md border border-yellow-200 bg-yellow-50 p-4">
-                <div className="flex items-start">
-                  <TriangleAlert className="mt-0.5 mr-2 size-4 text-yellow-600" />
-                  <div>
-                    <div className="font-medium text-yellow-800">API key validation disabled</div>
-                    <div className="mt-1 text-sm text-yellow-700">
-                      API key validation is currently disabled in project settings. API keys created
-                      here won&apos;t be enforced for log ingestion.{' '}
-                      <span className="font-medium">
-                        Enable &quot;Require API key&quot; in Settings to enforce API key
-                        validation.
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              <div className="text-muted-foreground mb-4 flex items-center gap-1.5 text-xs">
+                <Info className="size-3.5" />
+                <span>API key validation is disabled. Enable it in project settings.</span>
               </div>
             )}
 
