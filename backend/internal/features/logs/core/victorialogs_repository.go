@@ -510,10 +510,10 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		return fmt.Sprintf(`%s:!=%s`, logsQLField, escapeLogsQLValue(valueStr))
 
 	case ConditionOperatorContains:
-		return fmt.Sprintf(`%s:~'.*%s.*'`, logsQLField, escapeLogsQLRegex(valueStr))
+		return fmt.Sprintf(`%s:~".*%s.*"`, logsQLField, escapeLogsQLRegex(valueStr))
 
 	case ConditionOperatorNotContains:
-		return fmt.Sprintf(`%s:!~'.*%s.*'`, logsQLField, escapeLogsQLRegex(valueStr))
+		return fmt.Sprintf(`%s:!~".*%s.*"`, logsQLField, escapeLogsQLRegex(valueStr))
 
 	case ConditionOperatorIn:
 		values := asStringSlice(condition.Value)
@@ -531,7 +531,7 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		for i, v := range values {
 			escaped[i] = escapeLogsQLRegex(v)
 		}
-		return fmt.Sprintf(`%s:~'.*(%s).*'`, logsQLField, strings.Join(escaped, "|"))
+		return fmt.Sprintf(`%s:~".*(%s).*"`, logsQLField, strings.Join(escaped, "|"))
 
 	case ConditionOperatorNotIn:
 		values := asStringSlice(condition.Value)
@@ -542,7 +542,7 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		for i, v := range values {
 			escaped[i] = escapeLogsQLRegex(v)
 		}
-		return fmt.Sprintf(`%s:!~'.*(%s).*'`, logsQLField, strings.Join(escaped, "|"))
+		return fmt.Sprintf(`%s:!~".*(%s).*"`, logsQLField, strings.Join(escaped, "|"))
 
 	case ConditionOperatorExists:
 		if fieldName == "timestamp" {
@@ -647,20 +647,20 @@ func escapeLogsQLValue(value string) string {
 func escapeLogsQLRegex(value string) string {
 	r := strings.NewReplacer(
 		`\`, `\\`,
-		`'`, `\'`,
-		`.`, `\.`,
-		`*`, `\*`,
-		`+`, `\+`,
-		`?`, `\?`,
-		`(`, `\(`,
-		`)`, `\)`,
-		`[`, `\[`,
-		`]`, `\]`,
-		`{`, `\{`,
-		`}`, `\}`,
-		`|`, `\|`,
-		`^`, `\^`,
-		`$`, `\$`,
+		`"`, `\"`,
+		`.`, `\\.`,
+		`*`, `\\*`,
+		`+`, `\\+`,
+		`?`, `\\?`,
+		`(`, `\\(`,
+		`)`, `\\)`,
+		`[`, `\\[`,
+		`]`, `\\]`,
+		`{`, `\\{`,
+		`}`, `\\}`,
+		`|`, `\\|`,
+		`^`, `\\^`,
+		`$`, `\\$`,
 	)
 	return r.Replace(value)
 }
