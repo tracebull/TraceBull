@@ -222,6 +222,44 @@ func Test_ExecuteQueryForProject_WithContainsOperator_UserAgentField_ReturnsMatc
 	assert.Contains(t, log.Message, "User request from browser", "Should return the correct log")
 }
 
+func Test_ExecuteQueryForProject_WithContainsOperator_MessageSubstring_ReturnsMatchingLogs(t *testing.T) {
+	repository := logs_core.GetLogStorage()
+	projectID := uuid.New()
+	uniqueTestSession := uuid.New().String()[:8]
+	currentTime := time.Now().UTC()
+
+	matchingLogEntries := CreateTestLogEntriesWithUniqueFields(projectID, currentTime,
+		"Resolving eureka endpoints via configuration", map[string]any{
+			"test_session": uniqueTestSession,
+		})
+
+	nonMatchingLogEntries := CreateTestLogEntriesWithUniqueFields(projectID, currentTime.Add(1*time.Second),
+		"Resolving eureka endpoints via registry", map[string]any{
+			"test_session": uniqueTestSession,
+		})
+
+	allEntries := MergeLogEntries(matchingLogEntries, nonMatchingLogEntries)
+	StoreTestLogsAndFlush(t, repository, allEntries)
+
+	containsQuery := &logs_core.LogQueryRequestDTO{
+		Query: &logs_core.QueryNode{
+			Type: logs_core.QueryNodeTypeCondition,
+			Condition: &logs_core.ConditionNode{
+				Field:    "message",
+				Operator: logs_core.ConditionOperatorContains,
+				Value:    "config",
+			},
+		},
+		Limit: 10,
+	}
+
+	result, err := repository.ExecuteQueryForProject(projectID, containsQuery)
+	assert.NoError(t, err)
+	assert.Equal(t, int64(1), result.Total, "Should return 1 log containing the partial text 'config'")
+	assert.Len(t, result.Logs, 1)
+	assert.Equal(t, "Resolving eureka endpoints via configuration", result.Logs[0].Message)
+}
+
 // Array Operations Tests
 
 func Test_ExecuteQueryForProject_WithInOperator_ReturnsMatchingLogs(t *testing.T) {

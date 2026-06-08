@@ -27,10 +27,10 @@ var victoriaLogsSystemFields = map[string]bool{
 }
 
 type VictoriaLogsRepository struct {
-	client   *http.Client
-	baseURL  string
-	timeout  time.Duration
-	logger   *slog.Logger
+	client  *http.Client
+	baseURL string
+	timeout time.Duration
+	logger  *slog.Logger
 }
 
 func newVictoriaLogsStorage(env config.EnvVariables) *VictoriaLogsRepository {
@@ -394,7 +394,6 @@ func (r *VictoriaLogsRepository) queryStats(logsql string) (*LogsStatsDTO, error
 	return stats, nil
 }
 
-
 func (r *VictoriaLogsRepository) queryTotalCount(projectID uuid.UUID, request *LogQueryRequestDTO) (int64, error) {
 	logsql := r.buildLogsQL(projectID, request)
 	logsql += " | stats count() as total"
@@ -511,10 +510,10 @@ func (r *VictoriaLogsRepository) buildConditionFilter(condition *ConditionNode) 
 		return fmt.Sprintf(`%s:!=%s`, logsQLField, escapeLogsQLValue(valueStr))
 
 	case ConditionOperatorContains:
-		return fmt.Sprintf(`%s:"%s"`, logsQLField, escapeLogsQLPhrase(valueStr))
+		return fmt.Sprintf(`%s:~".*%s.*"`, logsQLField, escapeLogsQLRegex(valueStr))
 
 	case ConditionOperatorNotContains:
-		return fmt.Sprintf(`NOT (%s:"%s")`, logsQLField, escapeLogsQLPhrase(valueStr))
+		return fmt.Sprintf(`%s:!~".*%s.*"`, logsQLField, escapeLogsQLRegex(valueStr))
 
 	case ConditionOperatorIn:
 		values := asStringSlice(condition.Value)
@@ -643,12 +642,6 @@ func (r *VictoriaLogsRepository) parseLogRow(row map[string]any) LogItemDTO {
 
 func escapeLogsQLValue(value string) string {
 	return strconv.Quote(value)
-}
-
-func escapeLogsQLPhrase(value string) string {
-	return strings.NewReplacer(
-		`"`, `\"`,
-	).Replace(value)
 }
 
 func escapeLogsQLRegex(value string) string {
