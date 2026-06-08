@@ -15,7 +15,7 @@ func Test_BuildConditionFilter_WithContainsOperator_UsesSubstringRegex(t *testin
 		Value:    "config",
 	})
 
-	assert.Equal(t, `_msg:~".*config.*"`, filter)
+	assert.Equal(t, `_msg:~'.*config.*'`, filter)
 }
 
 func Test_BuildConditionFilter_WithNotContainsOperator_UsesSubstringRegex(t *testing.T) {
@@ -27,5 +27,5 @@ func Test_BuildConditionFilter_WithNotContainsOperator_UsesSubstringRegex(t *tes
 		Value:    "config",
 	})
 
-	assert.Equal(t, `_msg:!~".*config.*"`, filter)
+	assert.Equal(t, `_msg:!~'.*config.*'`, filter)
 }
