@@ -45,6 +45,7 @@ import type { ListUsersRequest } from '../../../entity/users/model/ListUsersRequ
 import type { UserProfile } from '../../../entity/users/model/UserProfile';
 import { UserRole } from '../../../entity/users/model/UserRole';
 import type { UsersSettings } from '../../../entity/users/model/UsersSettings';
+import { StringUtils } from '../../../shared/lib';
 import { getUserShortTimeFormat } from '../../../shared/time';
 import { BulkInviteComponent } from './BulkInviteComponent';
 import { UserAuditLogsSidebarComponent } from './UserAuditLogsSidebarComponent';
