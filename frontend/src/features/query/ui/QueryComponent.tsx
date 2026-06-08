@@ -91,7 +91,7 @@ export const QueryComponentComponent = ({
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [project, setProject] = useState<Project | undefined>();
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [isRealtimeStreaming, setIsRealtimeStreaming] = useState(false);
+  const [isRealtimeStreaming, setIsRealtimeStreaming] = useState(true);
   const [messageSearch, setMessageSearch] = useState('');
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
 
