@@ -19,7 +19,8 @@ import type { UserProfile } from '../model/UserProfile';
 
 const listeners: (() => void)[] = [];
 
-const saveAuthorizedData = (_token: string, userId: string) => {
+const saveAuthorizedData = (token: string, userId: string) => {
+  accessTokenHelper.saveToken(token);
   accessTokenHelper.saveUserId(userId);
 };
 
@@ -169,6 +170,7 @@ export const userApi = {
     } catch {
       // Sign out best-effort — clear local state regardless
     }
+    accessTokenHelper.clearToken();
     accessTokenHelper.clearUserId();
     notifyAuthListeners();
   },

@@ -10,6 +10,7 @@ const handleOrThrowMessageIfResponseError = async (
   handleNotAuthorizedError = true,
 ): Promise<void> => {
   if (handleNotAuthorizedError && response.status === 401) {
+    accessTokenHelper.clearToken();
     accessTokenHelper.clearUserId();
     window.location.reload();
   }
@@ -79,6 +80,11 @@ const buildDefaultHeaders = (method: string): [string, string][] => {
 
   if (['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(methodOverride)) {
     headers.push(['Access-Control-Allow-Methods', methodOverride]);
+  }
+
+  const token = accessTokenHelper.getToken();
+  if (token) {
+    headers.push(['Authorization', 'Bearer ' + token]);
   }
 
   return headers;
